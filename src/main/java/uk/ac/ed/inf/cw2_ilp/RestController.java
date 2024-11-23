@@ -177,6 +177,11 @@ public class RestController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
+    @PostMapping
+    public ResponseEntity<OrderValidationResult> validateOrder(@RequestBody String order){
+        return ResponseEntity.ok(OrderValidationResult.NO_ERROR);
+
+    }
 
     //check if a given string is invalid, returns true for invalid strings
     public boolean isntValidString(String input) {
