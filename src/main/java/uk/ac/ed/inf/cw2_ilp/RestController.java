@@ -72,7 +72,7 @@ public class RestController {
     public ResponseEntity<Boolean> isCloseTo(@RequestBody String lngLatPair) throws JsonProcessingException {
         boolean Close;
 
-        //calls getDistanceTo on the input and returns only the Double distanace
+        //calls getDistanceTo on the input and returns only the Double distance
         Double distance = getDistanceTo(lngLatPair).getBody();
 
         if (distance == null) {
@@ -177,8 +177,23 @@ public class RestController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
-    @PostMapping
-    public ResponseEntity<OrderValidationResult> validateOrder(@RequestBody String order){
+
+    @PostMapping("/validateOrder")
+    public ResponseEntity<OrderValidationResult> validateOrder(@RequestBody String orderRequest) throws JsonProcessingException {
+        Order currentOrder;
+        if (isntValidString(orderRequest)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        currentOrder = mapper.readValue(orderRequest, Order.class);
+        currentOrder.setOrderValidationCode(OrderValidationResult.UNDEFINED);
+        CreditCardInformation creditCardInformation = currentOrder.getCreditCardInformation();
+
+        if(creditCardCheck(creditCardInformation) != OrderValidationResult.NO_ERROR){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(creditCardCheck(creditCardInformation));
+        }
+
+
+
         return ResponseEntity.ok(OrderValidationResult.NO_ERROR);
 
     }
@@ -204,6 +219,8 @@ public class RestController {
                 lng != null && !lng.isNaN() && lng >= -180 && lng <= 180;
 
     }
+
+
 
     //calculates the next position given a start point and angle
     private LngLat calculateNewPos(LngLat start, Double angle) {
@@ -276,6 +293,26 @@ public class RestController {
             return false;
         }
         return true;
+    }
+
+    private OrderValidationResult creditCardCheck (CreditCardInformation creditCardInformation) {
+        String creditCardNumber = creditCardInformation.getCreditCardNumber();
+        String CVV = creditCardInformation.getCvv();
+        String expiryDate = creditCardInformation.getCreditCardExpiry();
+
+        if(CVV.length() != 3 || isntValidString(CVV) || !isDigitString(CVV)){
+            return OrderValidationResult.CVV_INVALID;
+        }
+
+        return OrderValidationResult.NO_ERROR;
+    }
+
+    private boolean isDigitString (String input) {
+        if (input.chars().allMatch(Character::isDigit)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }

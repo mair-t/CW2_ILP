@@ -1,39 +1,40 @@
 package uk.ac.ed.inf.cw2_ilp.dataTypes;
 import java.time.LocalDate;
+import java.util.List;
 
 public class Order {
 
-    public String orderNumber;
+    public String orderNo;
+    public String orderDate;
+    public OrderStatus orderStatus;
+    public OrderValidationResult orderValidationCode;
 
-    public LocalDate date;
-
-    public OrderStatus status;
-
-    public OrderValidationResult validationResult;
-
-    public int priceTotal;
-
-    public Pizza[] pizzas;
+    public int priceTotalInPence;
+    public List<Pizza> pizzasInOrder;
 
     public CreditCardInformation creditCardInformation;
 
-    public LocalDate getDate() {
-        return date;
+    public String getDate() {
+        return orderDate;
     }
 
-    public OrderStatus getStatus() {
-        return status;
+    public OrderStatus getOrderStatus() {
+        return orderStatus;
     }
-    public OrderValidationResult getValidationResult() {
-        return validationResult;
+    public OrderValidationResult getOrderValidationCode() {
+        return orderValidationCode;
     }
-    public int getPriceTotal() {
-        return priceTotal;
+    public int getPriceTotalInPence() {
+        return priceTotalInPence;
     }
-    public Pizza[] getPizzas() {
-        return pizzas;
-    }
+    //public Pizza[] getPizzasInOrder() {
+      //  return pizzasInOrder;
+    //}
     public CreditCardInformation getCreditCardInformation() {
         return creditCardInformation;
+    }
+
+    public void setOrderValidationCode(OrderValidationResult orderValidationCode) {
+        this.orderValidationCode = orderValidationCode;
     }
 }

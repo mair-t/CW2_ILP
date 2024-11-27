@@ -2,19 +2,19 @@ package uk.ac.ed.inf.cw2_ilp.dataTypes;
 
 public class CreditCardInformation {
 
-    public String CreditCardNumber;
+    public String creditCardNumber;
 
-    public String CVV;
+    public String creditCardExpiry;
 
-    public String ExpiryDate;
+    public String cvv;
 
     public String getCreditCardNumber() {
-        return CreditCardNumber;
+        return creditCardNumber;
     }
-    public String getCVV() {
-        return CVV;
+    public String getCvv() {
+        return cvv;
     }
-    public String getExpiryDate() {
-        return ExpiryDate;
+    public String getCreditCardExpiry() {
+        return creditCardExpiry;
     }
 }
