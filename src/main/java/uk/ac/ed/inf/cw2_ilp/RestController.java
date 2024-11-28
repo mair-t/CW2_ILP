@@ -190,12 +190,14 @@ public class RestController {
         currentOrder = mapper.readValue(orderRequest, Order.class);
         currentOrder.setOrderValidationCode(OrderValidationResult.UNDEFINED);
         CreditCardInformation creditCardInformation = currentOrder.getCreditCardInformation();
+        Pizza[] pizzas = currentOrder.getPizzasInOrder();
 
         if(creditCardCheck(creditCardInformation) != OrderValidationResult.NO_ERROR){
             return ResponseEntity.ok(creditCardCheck(creditCardInformation));
         }
-
-
+        if(pizzaCheck(pizzas, currentOrder) != OrderValidationResult.NO_ERROR){
+            return ResponseEntity.ok(pizzaCheck(pizzas, currentOrder));
+        }
 
         return ResponseEntity.ok(OrderValidationResult.NO_ERROR);
 
@@ -319,6 +321,20 @@ public class RestController {
         } else {
             return false;
         }
+    }
+    private OrderValidationResult pizzaCheck (Pizza[] pizzas, Order currentOrder){
+        int total = 0;
+        if( pizzas.length>4){
+            return OrderValidationResult.MAX_PIZZA_COUNT_EXCEEDED;
+        }
+        for (Pizza pizza : pizzas){
+            total = total + pizza.priceInPence;
+        }
+        total += 100;
+        if(total != currentOrder.getPriceTotalInPence()){
+            return OrderValidationResult.TOTAL_INCORRECT;
+        }
+        return OrderValidationResult.NO_ERROR;
     }
 
 }

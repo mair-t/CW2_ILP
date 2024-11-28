@@ -10,7 +10,8 @@ public class Order {
     public OrderValidationResult orderValidationCode;
 
     public int priceTotalInPence;
-    public List<Pizza> pizzasInOrder;
+
+    public Pizza[] pizzasInOrder;
 
     public CreditCardInformation creditCardInformation;
 
@@ -27,9 +28,9 @@ public class Order {
     public int getPriceTotalInPence() {
         return priceTotalInPence;
     }
-    //public Pizza[] getPizzasInOrder() {
-      //  return pizzasInOrder;
-    //}
+    public Pizza[] getPizzasInOrder() {
+        return pizzasInOrder;
+    }
     public CreditCardInformation getCreditCardInformation() {
         return creditCardInformation;
     }
