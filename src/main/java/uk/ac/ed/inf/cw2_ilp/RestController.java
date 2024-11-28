@@ -11,6 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @org.springframework.web.bind.annotation.RestController
@@ -189,7 +192,7 @@ public class RestController {
         CreditCardInformation creditCardInformation = currentOrder.getCreditCardInformation();
 
         if(creditCardCheck(creditCardInformation) != OrderValidationResult.NO_ERROR){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(creditCardCheck(creditCardInformation));
+            return ResponseEntity.ok(creditCardCheck(creditCardInformation));
         }
 
 
@@ -302,6 +305,9 @@ public class RestController {
 
         if(CVV.length() != 3 || isntValidString(CVV) || !isDigitString(CVV)){
             return OrderValidationResult.CVV_INVALID;
+        }
+        if(!isDigitString(creditCardNumber)|| isntValidString(creditCardNumber)|| creditCardNumber.length() != 16){
+            return OrderValidationResult.CARD_NUMBER_INVALID;
         }
 
         return OrderValidationResult.NO_ERROR;
