@@ -352,23 +352,46 @@ public class RestController {
         }
         Set<String> validPizzas = new HashSet<>();
         List<Restaurant> restaurants = fetchRestaurants();
+
         for (Restaurant restaurant : restaurants){
             for (Pizza menuItem : restaurant.menu) {
                 validPizzas.add(menuItem.name);
             }
         }
+        Restaurant firstRestaurant = null;
         for (Pizza pizza : pizzas) {
             if (!validPizzas.contains(pizza.name)) {
                 return OrderValidationResult.PIZZA_NOT_DEFINED;
             }
+            String name = pizza.getName();
+            Restaurant restaurant = getRestaurantForPizza(name,restaurants);
+            if (firstRestaurant == null) {
+                firstRestaurant = restaurant; // Set the first restaurant
+            } else if (!restaurant.equals(firstRestaurant)) {
+                return OrderValidationResult.PIZZA_FROM_MULTIPLE_RESTAURANTS;
+            }
+
+
+
         }
         return OrderValidationResult.NO_ERROR;
     }
-    public List<Restaurant> fetchRestaurants() {
+    private List<Restaurant> fetchRestaurants() {
         RestTemplate restTemplate = new RestTemplate();
         Restaurant[] restaurants = restTemplate.getForObject(BASE_URL + "restaurants", Restaurant[].class);
         assert restaurants != null;
         return List.of(restaurants);
     }
+    public Restaurant getRestaurantForPizza(String pizzaName, List<Restaurant> restaurants) {
+        for (Restaurant restaurant : restaurants) {
+            for (Pizza pizza : restaurant.menu) {
+                if (pizza.name.equalsIgnoreCase(pizzaName)) {
+                    return restaurant;
+                }
+            }
+        }
+        return null;
+    }
+
 
 }

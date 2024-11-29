@@ -5,4 +5,8 @@ public class Pizza {
     public String name;
 
     public int priceInPence;
+
+    public String getName(){
+        return name;
+    }
 }
