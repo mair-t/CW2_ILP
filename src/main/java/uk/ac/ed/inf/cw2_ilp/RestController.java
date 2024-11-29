@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.text.DecimalFormat;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
@@ -192,8 +193,8 @@ public class RestController {
         CreditCardInformation creditCardInformation = currentOrder.getCreditCardInformation();
         Pizza[] pizzas = currentOrder.getPizzasInOrder();
 
-        if(creditCardCheck(creditCardInformation) != OrderValidationResult.NO_ERROR){
-            return ResponseEntity.ok(creditCardCheck(creditCardInformation));
+        if(creditCardCheck(creditCardInformation, currentOrder) != OrderValidationResult.NO_ERROR){
+            return ResponseEntity.ok(creditCardCheck(creditCardInformation, currentOrder));
         }
         if(pizzaCheck(pizzas, currentOrder) != OrderValidationResult.NO_ERROR){
             return ResponseEntity.ok(pizzaCheck(pizzas, currentOrder));
@@ -300,7 +301,7 @@ public class RestController {
         return true;
     }
 
-    private OrderValidationResult creditCardCheck (CreditCardInformation creditCardInformation) {
+    private OrderValidationResult creditCardCheck (CreditCardInformation creditCardInformation, Order order) {
         String creditCardNumber = creditCardInformation.getCreditCardNumber();
         String CVV = creditCardInformation.getCvv();
         String expiryDate = creditCardInformation.getCreditCardExpiry();
@@ -310,6 +311,17 @@ public class RestController {
         }
         if(!isDigitString(creditCardNumber)|| isntValidString(creditCardNumber)|| creditCardNumber.length() != 16){
             return OrderValidationResult.CARD_NUMBER_INVALID;
+        }
+        DateTimeFormatter expiryFormatter = DateTimeFormatter.ofPattern("MM/yy");
+        YearMonth expiryYearMonth = YearMonth.parse(expiryDate, expiryFormatter);
+
+
+        LocalDate expiry = expiryYearMonth.atEndOfMonth();
+
+        LocalDate orderDate = LocalDate.parse(order.getDate());
+
+        if(!expiry.isAfter(orderDate)){
+            return OrderValidationResult.EXPIRY_DATE_INVALID;
         }
 
         return OrderValidationResult.NO_ERROR;
