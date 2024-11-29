@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -15,7 +16,9 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @org.springframework.web.bind.annotation.RestController
 public class RestController {
@@ -23,6 +26,7 @@ public class RestController {
     ObjectMapper mapper = new ObjectMapper().setDefaultPrettyPrinter(new DefaultPrettyPrinter());
     public Double MOVEMENT = 0.00015;
     public static final DecimalFormat DF = new DecimalFormat("0.000000");
+    public String BASE_URL = "https://ilp-rest-2024.azurewebsites.net/";
 
 
     // returns my student ID as a string
@@ -346,7 +350,25 @@ public class RestController {
         if(total != currentOrder.getPriceTotalInPence()){
             return OrderValidationResult.TOTAL_INCORRECT;
         }
+        Set<String> validPizzas = new HashSet<>();
+        List<Restaurant> restaurants = fetchRestaurants();
+        for (Restaurant restaurant : restaurants){
+            for (Pizza menuItem : restaurant.menu) {
+                validPizzas.add(menuItem.name);
+            }
+        }
+        for (Pizza pizza : pizzas) {
+            if (!validPizzas.contains(pizza.name)) {
+                return OrderValidationResult.PIZZA_NOT_DEFINED;
+            }
+        }
         return OrderValidationResult.NO_ERROR;
+    }
+    public List<Restaurant> fetchRestaurants() {
+        RestTemplate restTemplate = new RestTemplate();
+        Restaurant[] restaurants = restTemplate.getForObject(BASE_URL + "restaurants", Restaurant[].class);
+        assert restaurants != null;
+        return List.of(restaurants);
     }
 
 }
