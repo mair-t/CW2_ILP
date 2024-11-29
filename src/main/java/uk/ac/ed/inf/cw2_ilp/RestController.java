@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import java.text.DecimalFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -365,12 +366,14 @@ public class RestController {
             }
             String name = pizza.getName();
             Restaurant restaurant = getRestaurantForPizza(name,restaurants);
+            if(!isRestaurantOpen(restaurant, currentOrder.getDate())){
+                return OrderValidationResult.RESTAURANT_CLOSED;
+            }
             if (firstRestaurant == null) {
                 firstRestaurant = restaurant; // Set the first restaurant
             } else if (!restaurant.equals(firstRestaurant)) {
                 return OrderValidationResult.PIZZA_FROM_MULTIPLE_RESTAURANTS;
             }
-
 
 
         }
@@ -382,7 +385,7 @@ public class RestController {
         assert restaurants != null;
         return List.of(restaurants);
     }
-    public Restaurant getRestaurantForPizza(String pizzaName, List<Restaurant> restaurants) {
+    private Restaurant getRestaurantForPizza(String pizzaName, List<Restaurant> restaurants) {
         for (Restaurant restaurant : restaurants) {
             for (Pizza pizza : restaurant.menu) {
                 if (pizza.name.equalsIgnoreCase(pizzaName)) {
@@ -391,6 +394,12 @@ public class RestController {
             }
         }
         return null;
+    }
+
+    private boolean isRestaurantOpen(Restaurant restaurant, String orderDate) {
+        LocalDate date = LocalDate.parse(orderDate);
+        DayOfWeek day = date.getDayOfWeek();
+        return restaurant.openingDays.contains(day);
     }
 
 

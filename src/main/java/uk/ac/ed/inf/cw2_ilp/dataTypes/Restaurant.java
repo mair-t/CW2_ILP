@@ -13,5 +13,7 @@ public class Restaurant {
 
     public Pizza[] menu;
 
-
+    public List<DayOfWeek> getOpeningDays() {
+        return openingDays;
+    }
 }
