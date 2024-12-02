@@ -16,4 +16,8 @@ public class Restaurant {
     public List<DayOfWeek> getOpeningDays() {
         return openingDays;
     }
+
+    public LngLat getLocation() {
+        return location;
+    }
 }

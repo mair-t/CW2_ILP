@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,7 @@ public class RestController {
     public Double MOVEMENT = 0.00015;
     public static final DecimalFormat DF = new DecimalFormat("0.000000");
     public String BASE_URL = "https://ilp-rest-2024.azurewebsites.net/";
+    public String APPLETON_COORDINATES = "−3.186874, 55.944494";
 
 
     // returns my student ID as a string
@@ -209,6 +211,31 @@ public class RestController {
 
     }
 
+    @PostMapping("calcDeliveryPath")
+    public ResponseEntity<LngLat[]> calcDeliveryPath(@RequestBody String orderRequest) throws JsonProcessingException {
+        Order currentOrder;
+        OrderValidationResult validation = validateOrder(orderRequest).getBody();
+        if(!(validation == OrderValidationResult.NO_ERROR)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        currentOrder = mapper.readValue(orderRequest, Order.class);
+        Pizza[] pizzas = currentOrder.getPizzasInOrder();
+        String pizzaName = pizzas[0].getName();
+        List<Restaurant> restaurants = fetchRestaurants();
+        Restaurant restaurant = getRestaurantForPizza(pizzaName, restaurants);
+
+        LngLat restaurantLocation = restaurant.getLocation();
+        LngLat appletonLocation;
+        appletonLocation = mapper.readValue(APPLETON_COORDINATES, LngLat.class);
+        List<LngLat> pathList = calculatePath(restaurantLocation,appletonLocation);
+        LngLat[] path = pathList.toArray(new LngLat[0]);
+
+        return ResponseEntity.ok(path);
+    }
+
+
+
+
     //check if a given string is invalid, returns true for invalid strings
     public boolean isntValidString(String input) {
         return input == null || input.isEmpty();
@@ -370,7 +397,7 @@ public class RestController {
                 return OrderValidationResult.RESTAURANT_CLOSED;
             }
             if (firstRestaurant == null) {
-                firstRestaurant = restaurant; // Set the first restaurant
+                firstRestaurant = restaurant;
             } else if (!restaurant.equals(firstRestaurant)) {
                 return OrderValidationResult.PIZZA_FROM_MULTIPLE_RESTAURANTS;
             }
@@ -400,6 +427,11 @@ public class RestController {
         LocalDate date = LocalDate.parse(orderDate);
         DayOfWeek day = date.getDayOfWeek();
         return restaurant.openingDays.contains(day);
+    }
+
+    private List<LngLat> calculatePath (LngLat startPos, LngLat endPos) {
+        List<LngLat> path = new ArrayList<>();
+       return path;
     }
 
 
