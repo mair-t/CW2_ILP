@@ -431,7 +431,45 @@ public class RestController {
 
     private List<LngLat> calculatePath (LngLat startPos, LngLat endPos) {
         List<LngLat> path = new ArrayList<>();
+        List<NamedRegion> noFlyZones = fetchNoFlyZones();
        return path;
+    }
+
+    private List<NamedRegion> fetchNoFlyZones() {
+        RestTemplate restTemplate = new RestTemplate();
+        NamedRegion[] noFlyZones = restTemplate.getForObject(BASE_URL + "noFlyZones", NamedRegion[].class);
+        assert noFlyZones != null;
+        return List.of(noFlyZones);
+    }
+
+    private boolean isInNoFlyZone(NamedRegion[] noFlyZones, LngLat point) throws JsonProcessingException {
+        for (NamedRegion noFlyZone : noFlyZones) {
+            IsInRegionRequest request = new IsInRegionRequest();
+            request.setRegion(noFlyZone);
+            request.setPosition(point);
+
+            String requestJson = mapper.writeValueAsString(request);
+
+            if (isInRegion(requestJson).getBody()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private NamedRegion fetchCentralArea(){
+        RestTemplate restTemplate = new RestTemplate();
+        return restTemplate.getForObject(BASE_URL + "centralArea", NamedRegion.class);
+    }
+
+    private List<LngLat> getNeighbors(LngLat current) throws JsonProcessingException {
+        List<LngLat> neighbors = new ArrayList<>();
+        for (double angle = 0; angle < 360; angle += 22.5) {
+            LngLat nextPosition = calculateNewPos(current,angle);
+            neighbors.add(nextPosition);
+        }
+        return neighbors;
     }
 
 

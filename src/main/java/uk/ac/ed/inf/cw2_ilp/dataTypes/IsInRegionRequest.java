@@ -12,4 +12,12 @@ public class IsInRegionRequest {
     public LngLat getPosition(){
         return position;
     }
+
+    public void setRegion(NamedRegion region) {
+        this.region = region;
+    }
+
+    public void setPosition(LngLat position) {
+        this.position = position;
+    }
 }
