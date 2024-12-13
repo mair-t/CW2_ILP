@@ -26,7 +26,10 @@ public class RestController {
     public Double MOVEMENT = 0.00015;
     public static final DecimalFormat DF = new DecimalFormat("0.000000");
     public String BASE_URL = "https://ilp-rest-2024.azurewebsites.net/";
-    public String APPLETON_COORDINATES = "−3.186874, 55.944494";
+    public String APPLETON_COORDINATES = "{\n" +
+            "    \"lng\": -3.186874,\n" +
+            "    \"lat\": 55.944494\n" +
+            "}";
 
 
     // returns my student ID as a string
@@ -224,8 +227,9 @@ public class RestController {
         LngLat restaurantLocation = restaurant.getLocation();
         LngLat appletonLocation;
         appletonLocation = mapper.readValue(APPLETON_COORDINATES, LngLat.class);
-        List<LngLat> pathList = calculatePath(restaurantLocation,appletonLocation);
-        LngLat[] path = pathList.toArray(new LngLat[0]);
+      //  List<LngLat> pathList = calculatePath(restaurantLocation,appletonLocation);
+      //  LngLat[] path = pathList.toArray(new LngLat[0]);
+        LngLat[] path = new LngLat[0];
 
         return ResponseEntity.ok(path);
     }
