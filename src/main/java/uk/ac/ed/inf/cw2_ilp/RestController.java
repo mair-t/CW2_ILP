@@ -17,10 +17,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @org.springframework.web.bind.annotation.RestController
 public class RestController {
@@ -258,6 +255,15 @@ public class RestController {
 
     }
 
+    private double getDistanceBetween(LngLat pos_1, LngLat pos_2){
+
+        double latDiff = pos_1.getLat() - pos_2.getLat();
+        double lngDiff = pos_1.getLng() - pos_2.getLng();
+
+        //calculates and returns the Euclidean distance
+        return Math.sqrt(Math.pow(latDiff, 2) + Math.pow(lngDiff, 2));
+    }
+
 
 
     //calculates the next position given a start point and angle
@@ -429,10 +435,61 @@ public class RestController {
         return restaurant.openingDays.contains(day);
     }
 
-    private List<LngLat> calculatePath (LngLat startPos, LngLat endPos) {
-        List<LngLat> path = new ArrayList<>();
+    private List<LngLat> calculatePath (LngLat startPos, LngLat endPos) throws JsonProcessingException {
         List<NamedRegion> noFlyZones = fetchNoFlyZones();
-       return path;
+
+        Map<LngLat, Double> fScores = new HashMap<>();
+        Set<LngLat> closedSet = new HashSet<>();
+        Map<LngLat, LngLat> cameFrom = new HashMap<>();
+        Map<LngLat, Double> gScores = new HashMap<>();
+
+
+        PriorityQueue<LngLat> openSet = new PriorityQueue<>(
+                Comparator.comparingDouble(node -> fScores.getOrDefault(node, Double.MAX_VALUE))
+        );
+
+        boolean insideCentralArea = false;
+
+        openSet.add(startPos);
+        gScores.put(startPos, 0.0);
+        fScores.put(startPos, getDistanceBetween(startPos, endPos));
+
+        while (!openSet.isEmpty()){
+            LngLat current = openSet.poll();
+
+            if (getDistanceBetween(current, endPos) <0.00015) {
+                return reconstructPath(cameFrom, current);
+            }
+            closedSet.add(current);
+
+            for (LngLat neighbour: getNeighbors(current)){
+                if (closedSet.contains(neighbour) || isInNoFlyZone(noFlyZones,neighbour)) {
+                    continue;
+                }
+                boolean neighborInsideCentralArea = isInCentralArea(neighbour);
+
+
+                if (insideCentralArea && !neighborInsideCentralArea) {
+                    continue;
+                }
+                if (!insideCentralArea && neighborInsideCentralArea) {
+                    insideCentralArea = true;
+                }
+                double tentativeGScore = gScores.getOrDefault(current, Double.MAX_VALUE) + 0.0015;
+
+                if (!gScores.containsKey(neighbour) || tentativeGScore < gScores.get(neighbour)) {
+                    cameFrom.put(neighbour, current);
+                    gScores.put(neighbour, tentativeGScore);
+                    fScores.put(neighbour, tentativeGScore + getDistanceBetween(neighbour, endPos));
+
+                    if (!openSet.contains(neighbour)) {
+                        openSet.add(neighbour);
+                    }
+                }
+            }
+        }
+
+        throw new RuntimeException("No path found");
     }
 
     private List<NamedRegion> fetchNoFlyZones() {
@@ -442,7 +499,7 @@ public class RestController {
         return List.of(noFlyZones);
     }
 
-    private boolean isInNoFlyZone(NamedRegion[] noFlyZones, LngLat point) throws JsonProcessingException {
+    private boolean isInNoFlyZone(List<NamedRegion> noFlyZones, LngLat point) throws JsonProcessingException {
         for (NamedRegion noFlyZone : noFlyZones) {
             IsInRegionRequest request = new IsInRegionRequest();
             request.setRegion(noFlyZone);
@@ -470,6 +527,30 @@ public class RestController {
             neighbors.add(nextPosition);
         }
         return neighbors;
+    }
+
+    private List<LngLat> reconstructPath (Map<LngLat, LngLat> cameFrom, LngLat current) {
+        List<LngLat> path = new ArrayList<>();
+        while (cameFrom.containsKey(current)) {
+            path.add(0, current);
+            current = cameFrom.get(current);
+        }
+        path.add(0, current);
+        return path;
+    }
+    private boolean isInCentralArea(LngLat position) throws JsonProcessingException {
+        NamedRegion centralArea = fetchCentralArea();
+        IsInRegionRequest request = new IsInRegionRequest();
+        request.setRegion(centralArea);
+        request.setPosition(position);
+
+        String requestJson = mapper.writeValueAsString(request);
+
+        if (Boolean.TRUE.equals(isInRegion(requestJson).getBody())) {
+            return true;
+        }
+
+        return false;
     }
 
 
