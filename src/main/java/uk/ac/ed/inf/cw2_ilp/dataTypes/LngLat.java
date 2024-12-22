@@ -21,4 +21,14 @@ public class LngLat {
         this.lat = lat;
     }
 
+    @Override
+    public boolean equals(Object obj){
+        if(obj instanceof LngLat){
+            if (this.lng == ((LngLat)obj).lng && this.lat == ((LngLat)obj).lat){
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

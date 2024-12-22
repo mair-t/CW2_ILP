@@ -11,12 +11,12 @@ import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
+import javax.swing.plaf.synth.Region;
 import java.text.DecimalFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 
 @org.springframework.web.bind.annotation.RestController
@@ -24,7 +24,7 @@ public class RestController {
 
     ObjectMapper mapper = new ObjectMapper().setDefaultPrettyPrinter(new DefaultPrettyPrinter());
     public Double MOVEMENT = 0.00015;
-    public static final DecimalFormat DF = new DecimalFormat("0.000000");
+    public static final DecimalFormat DF = new DecimalFormat("0.000000000000000000");
     public String BASE_URL = "https://ilp-rest-2024.azurewebsites.net/";
     public String APPLETON_COORDINATES = "{\n" +
             "    \"lng\": -3.186874,\n" +
@@ -227,9 +227,9 @@ public class RestController {
         LngLat restaurantLocation = restaurant.getLocation();
         LngLat appletonLocation;
         appletonLocation = mapper.readValue(APPLETON_COORDINATES, LngLat.class);
-      //  List<LngLat> pathList = calculatePath(restaurantLocation,appletonLocation);
-      //  LngLat[] path = pathList.toArray(new LngLat[0]);
-        LngLat[] path = new LngLat[0];
+        List<LngLat> pathList = calculatePath(restaurantLocation,appletonLocation);
+        LngLat[] path = pathList.toArray(new LngLat[0]);
+
 
         return ResponseEntity.ok(path);
     }
@@ -272,6 +272,9 @@ public class RestController {
 
     //calculates the next position given a start point and angle
     private LngLat calculateNewPos(LngLat start, Double angle) {
+        LngLat position = new LngLat();
+        position.setLat(start.getLat());
+        position.setLng(start.getLng());
 
 
         //calculate hoe much the altitude and longitude have to change by using trig
@@ -279,9 +282,9 @@ public class RestController {
         double lngChange = MOVEMENT * Math.sin(Math.toRadians(angle));
 
         //set the values to the values after the calculated change
-        start.setLat(Double.parseDouble(DF.format(start.getLat() + latChange)));
-        start.setLng(Double.parseDouble(DF.format(start.getLng() + lngChange)));
-        return start;
+        position.setLat(position.getLat() + latChange);
+        position.setLng(position.getLng() + lngChange);
+        return position;
     }
 
     //check the angle is valid, return true if angle is valid
@@ -441,59 +444,52 @@ public class RestController {
 
     private List<LngLat> calculatePath (LngLat startPos, LngLat endPos) throws JsonProcessingException {
         List<NamedRegion> noFlyZones = fetchNoFlyZones();
-
-        Map<LngLat, Double> fScores = new HashMap<>();
-        Set<LngLat> closedSet = new HashSet<>();
-        Map<LngLat, LngLat> cameFrom = new HashMap<>();
-        Map<LngLat, Double> gScores = new HashMap<>();
+        Set<Node> closedSet = new HashSet<>() {};
+        PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(Node::getF));
 
 
-        PriorityQueue<LngLat> openSet = new PriorityQueue<>(
-                Comparator.comparingDouble(node -> fScores.getOrDefault(node, Double.MAX_VALUE))
-        );
+        double h;
+        double g;
 
-        boolean insideCentralArea = false;
+        Node start = new Node();
+        start.setPosition(startPos);
+        start.setG(0);
+        start.setF(0,0);
 
-        openSet.add(startPos);
-        gScores.put(startPos, 0.0);
-        fScores.put(startPos, getDistanceBetween(startPos, endPos));
+        openSet.add(start);
 
-        while (!openSet.isEmpty()){
-            LngLat current = openSet.poll();
+        while(!openSet.isEmpty()){
+            Node current = openSet.poll();
 
-            if (getDistanceBetween(current, endPos) <0.00015) {
-                return reconstructPath(cameFrom, current);
+            List<Node> neighbours = getNeighbours(current, noFlyZones);
+
+            for (Node neighbour : neighbours) {
+                if (getDistanceBetween(neighbour.getPosition(), endPos) <0.0015){
+                    List<LngLat> path = reconstructPath(current);
+                    return path;
+                }
+                else{
+                    g = current.getG()+ MOVEMENT;
+                    h = getDistanceBetween(neighbour.getPosition(), endPos);
+                    neighbour.setG(current.getG() + MOVEMENT);
+                    neighbour.setF(g,h);
+
+                    if (isNodeSkipped(neighbour, openSet) || isNodeSkipped(neighbour, closedSet)){
+                        System.out.println("skipped Node");
+                        continue;
+
+                    }
+                    openSet.add(neighbour);
+                    System.out.println("added Node to open");
+                }
             }
             closedSet.add(current);
+            System.out.println("added Node to closed");
 
-            for (LngLat neighbour: getNeighbors(current)){
-                if (closedSet.contains(neighbour) || isInNoFlyZone(noFlyZones,neighbour)) {
-                    continue;
-                }
-                boolean neighborInsideCentralArea = isInCentralArea(neighbour);
-
-
-                if (insideCentralArea && !neighborInsideCentralArea) {
-                    continue;
-                }
-                if (!insideCentralArea && neighborInsideCentralArea) {
-                    insideCentralArea = true;
-                }
-                double tentativeGScore = gScores.getOrDefault(current, Double.MAX_VALUE) + 0.0015;
-
-                if (!gScores.containsKey(neighbour) || tentativeGScore < gScores.get(neighbour)) {
-                    cameFrom.put(neighbour, current);
-                    gScores.put(neighbour, tentativeGScore);
-                    fScores.put(neighbour, tentativeGScore + getDistanceBetween(neighbour, endPos));
-
-                    if (!openSet.contains(neighbour)) {
-                        openSet.add(neighbour);
-                    }
-                }
-            }
         }
 
-        throw new RuntimeException("No path found");
+
+        return List.of(startPos, endPos);
     }
 
     private List<NamedRegion> fetchNoFlyZones() {
@@ -524,24 +520,42 @@ public class RestController {
         return restTemplate.getForObject(BASE_URL + "centralArea", NamedRegion.class);
     }
 
-    private List<LngLat> getNeighbors(LngLat current) throws JsonProcessingException {
-        List<LngLat> neighbors = new ArrayList<>();
+    private List<Node> getNeighbours(Node current,List<NamedRegion> noFlyZones) throws JsonProcessingException {
+        List<Node> neighbours = new ArrayList<>();
         for (double angle = 0; angle < 360; angle += 22.5) {
-            LngLat nextPosition = calculateNewPos(current,angle);
-            neighbors.add(nextPosition);
+            LngLat nextPosition = calculateNewPos(current.getPosition(),angle);
+            if (!isInNoFlyZone(noFlyZones, nextPosition)) {
+                Node neighbour = new Node();
+                neighbour.setParent(current);
+                neighbour.setPosition(nextPosition);
+                neighbours.add(neighbour);
+            };
         }
-        return neighbors;
+
+        return neighbours;
     }
 
-    private List<LngLat> reconstructPath (Map<LngLat, LngLat> cameFrom, LngLat current) {
+    private List<LngLat> reconstructPath ( Node current) {
         List<LngLat> path = new ArrayList<>();
-        while (cameFrom.containsKey(current)) {
-            path.add(0, current);
-            current = cameFrom.get(current);
+        while (current != null) {
+            path.add(current.getPosition());
+            current = current.getParent();
         }
-        path.add(0, current);
+        Collections.reverse(path);
         return path;
     }
+
+    private boolean isNodeSkipped (Node neighbour, Collection<Node> list){
+        for (Node node : list) {
+            LngLat position = node.getPosition();
+            if (position.equals(neighbour.getPosition()) && node.getF() <= neighbour.getF()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     private boolean isInCentralArea(LngLat position) throws JsonProcessingException {
         NamedRegion centralArea = fetchCentralArea();
         IsInRegionRequest request = new IsInRegionRequest();
