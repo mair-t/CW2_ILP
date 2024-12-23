@@ -223,20 +223,26 @@ public class RestController {
     @PostMapping("calcDeliveryPath")
     public ResponseEntity<LngLat[]> calcDeliveryPath(@RequestBody String orderRequest) throws JsonProcessingException {
         Order currentOrder;
+        // validate order, if invalid then return an error
         OrderValidationResult validation = validateOrder(orderRequest).getBody();
         if(!(validation == OrderValidationResult.NO_ERROR)){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
+        //map order to order class
         currentOrder = mapper.readValue(orderRequest, Order.class);
+        //use pizzas to find the restaurant
         Pizza[] pizzas = currentOrder.getPizzasInOrder();
         String pizzaName = pizzas[0].getName();
         List<Restaurant> restaurants = fetchRestaurants();
         Restaurant restaurant = getRestaurantForPizza(pizzaName, restaurants);
-
+        //find location of restaurant
         LngLat restaurantLocation = restaurant.getLocation();
+        //find the location of appleton in LngLat format
         LngLat appletonLocation;
         appletonLocation = mapper.readValue(APPLETON_COORDINATES, LngLat.class);
+        //use calculate path to find the path
         List<LngLat> pathList = calculatePath(restaurantLocation,appletonLocation);
+        //format this as an array and return
         LngLat[] path = pathList.toArray(new LngLat[0]);
 
 
@@ -275,6 +281,7 @@ public class RestController {
 
     }
 
+    //find the difference between two points
     private double getDistanceBetween(LngLat pos_1, LngLat pos_2){
 
         double latDiff = pos_1.getLat() - pos_2.getLat();
@@ -362,17 +369,22 @@ public class RestController {
         return true;
     }
 
+    //checks the credit card information to see if its valid
     private OrderValidationResult creditCardCheck (CreditCardInformation creditCardInformation, Order order) {
+        //get the 3 aspects of the credit card information as strings
         String creditCardNumber = creditCardInformation.getCreditCardNumber();
         String CVV = creditCardInformation.getCvv();
         String expiryDate = creditCardInformation.getCreditCardExpiry();
 
+        //Check if the CVV is valid and return CVV_INVALID if not
         if(CVV.length() != 3 || isntValidString(CVV) || !isDigitString(CVV)){
             return OrderValidationResult.CVV_INVALID;
         }
+        //Check if the creditCardNumber is valid and return CARD_NUMBER_INVALID if not
         if(!isDigitString(creditCardNumber)|| isntValidString(creditCardNumber)|| creditCardNumber.length() != 16){
             return OrderValidationResult.CARD_NUMBER_INVALID;
         }
+        //format the given date as MM/yy
         DateTimeFormatter expiryFormatter = DateTimeFormatter.ofPattern("MM/yy");
         YearMonth expiryYearMonth = YearMonth.parse(expiryDate, expiryFormatter);
 
@@ -381,13 +393,15 @@ public class RestController {
 
         LocalDate orderDate = LocalDate.parse(order.getDate());
 
+        //if the expiry date is not after the order date return EXPIRY_DATE_INVALID
         if(!expiry.isAfter(orderDate)){
             return OrderValidationResult.EXPIRY_DATE_INVALID;
         }
-
+        //if there are no issues return NO_ERROR
         return OrderValidationResult.NO_ERROR;
     }
 
+    //check that all characters in a string are digits
     private boolean isDigitString (String input) {
         if (input.chars().allMatch(Character::isDigit)) {
             return true;
@@ -395,36 +409,50 @@ public class RestController {
             return false;
         }
     }
+
+    //checks that elements associated with pizza and restaurants are valid or returns and updates the result
     private OrderValidationResult pizzaCheck (Pizza[] pizzas, Order currentOrder){
         int total = 0;
+        //if there are more than 4 pizzas it is invalid
         if( pizzas.length>4){
             return OrderValidationResult.MAX_PIZZA_COUNT_EXCEEDED;
         }
+        //add up the order total
         for (Pizza pizza : pizzas){
             total = total + pizza.priceInPence;
         }
+        //add the delivery fee
         total += 100;
+        // if the totals are not equal then return TOTAL_INCORRECT
         if(total != currentOrder.getPriceTotalInPence()){
             return OrderValidationResult.TOTAL_INCORRECT;
         }
+        //create a set of valid pizzas
         Set<String> validPizzas = new HashSet<>();
+        //fetch the list of restaurants from the rest service
         List<Restaurant> restaurants = fetchRestaurants();
 
+        //add all valid pizzas to a set
         for (Restaurant restaurant : restaurants){
             for (Pizza menuItem : restaurant.menu) {
                 validPizzas.add(menuItem.name);
             }
         }
         Restaurant firstRestaurant = null;
+
         for (Pizza pizza : pizzas) {
+            //if any pizza is not in the valid pizza set return PIZZA_NOT_DEFINED
             if (!validPizzas.contains(pizza.name)) {
                 return OrderValidationResult.PIZZA_NOT_DEFINED;
             }
+            //using the name figure out which restaurant the pizza came from
             String name = pizza.getName();
             Restaurant restaurant = getRestaurantForPizza(name,restaurants);
+            //if this restaurant isnt open return RESTAURANT_CLOSED
             if(!isRestaurantOpen(restaurant, currentOrder.getDate())){
                 return OrderValidationResult.RESTAURANT_CLOSED;
             }
+            //if the restaurant doesn't match the pizza before return PIZZA_FROM_MULTIPLE_RESTAURANTS
             if (firstRestaurant == null) {
                 firstRestaurant = restaurant;
             } else if (!restaurant.equals(firstRestaurant)) {
@@ -433,14 +461,17 @@ public class RestController {
 
 
         }
+        //else return NO_ERROR
         return OrderValidationResult.NO_ERROR;
     }
+    //fetch all restaurants from the rest service
     private List<Restaurant> fetchRestaurants() {
         RestTemplate restTemplate = new RestTemplate();
         Restaurant[] restaurants = restTemplate.getForObject(BASE_URL + "restaurants", Restaurant[].class);
         assert restaurants != null;
         return List.of(restaurants);
     }
+    //for a given pizza calculate which restaurant it came from
     private Restaurant getRestaurantForPizza(String pizzaName, List<Restaurant> restaurants) {
         for (Restaurant restaurant : restaurants) {
             for (Pizza pizza : restaurant.menu) {
@@ -452,65 +483,76 @@ public class RestController {
         return null;
     }
 
+    //given a date calculate if the restaurant given is open
     private boolean isRestaurantOpen(Restaurant restaurant, String orderDate) {
+        //calculate what day it is using the date
         LocalDate date = LocalDate.parse(orderDate);
         DayOfWeek day = date.getDayOfWeek();
+        //return true if the day is in the list of opening days
         return restaurant.openingDays.contains(day);
     }
 
+    //calculates a path using an A* algorithm
     private List<LngLat> calculatePath (LngLat startPos, LngLat endPos) throws JsonProcessingException {
+       //retrieves no fly zones
         List<NamedRegion> noFlyZones = fetchNoFlyZones();
+        //initialise variables
         Set<Node> closedSet = new HashSet<>() {};
         PriorityQueue<Node> openSet = new PriorityQueue<>(Comparator.comparingDouble(Node::getF));
-
 
         double h;
         double g;
 
+        //initialise start node
         Node start = new Node();
         start.setPosition(startPos);
         start.setG(0);
         start.setF(0,0);
 
+        //add start to open set
         openSet.add(start);
 
+        //while the open set isnt empty
         while(!openSet.isEmpty()){
+            //current node is the one with the lowest F
             Node current = openSet.poll();
 
+            //return a list of neighbours of the current node
             List<Node> neighbours = getNeighbours(current, noFlyZones);
-            System.out.println("returned" + neighbours.size() + " neighbours");
 
             for (Node neighbour : neighbours) {
+                //if the neighbour is close to the goal reconstruct the path and return it
                 if (getDistanceBetween(neighbour.getPosition(), endPos) <0.00015){
                     List<LngLat> path = reconstructPath(neighbour);
-                    System.out.println(getDistanceBetween(neighbour.getPosition(), endPos));
                     return path;
                 }
                 else{
+                    //calculate tentative g and h values
                     g = neighbour.getParent().getG()+ MOVEMENT;
                     h = getDistanceBetween(neighbour.getPosition(), endPos);
+                    //set the G and F for the neighbour
                     neighbour.setG(current.getG() + MOVEMENT);
                     neighbour.setF(g,h);
 
+                    //skip the node if there exists one with the same position and lower F
                     if (isNodeSkipped(neighbour, openSet) || isNodeSkipped(neighbour, closedSet)){
-                        System.out.println("skipped Node");
                         continue;
 
                     }
+                    //add neighbour to the open set
                     openSet.add(neighbour);
-                    System.out.println("added Node to open");
-                    System.out.println(neighbour.getF());
                 }
             }
+            //the current node was dealt with and can be added to closedSet
             closedSet.add(current);
-            System.out.println("added Node to closed");
 
         }
 
-
-        return List.of(startPos, endPos);
+        //if no path is found return null
+        return null;
     }
 
+    //retrieve noFlyZones from the website
     private List<NamedRegion> fetchNoFlyZones() {
         RestTemplate restTemplate = new RestTemplate();
         NamedRegion[] noFlyZones = restTemplate.getForObject(BASE_URL + "noFlyZones", NamedRegion[].class);
@@ -518,7 +560,9 @@ public class RestController {
         return List.of(noFlyZones);
     }
 
+    //find if a given point is in a noFlyZone
     private boolean isInNoFlyZone(List<NamedRegion> noFlyZones, LngLat point) throws JsonProcessingException {
+       //for each no fly zone use isInRegion to find if the point is located inside it
         for (NamedRegion noFlyZone : noFlyZones) {
             IsInRegionRequest request = new IsInRegionRequest();
             request.setRegion(noFlyZone);
@@ -534,19 +578,26 @@ public class RestController {
         return false;
     }
 
+    //retrieve the central area
     private NamedRegion fetchCentralArea(){
         RestTemplate restTemplate = new RestTemplate();
         return restTemplate.getForObject(BASE_URL + "centralArea", NamedRegion.class);
     }
 
+    //retrieve all valid neighbours for a node
     private List<Node> getNeighbours(Node current,List<NamedRegion> noFlyZones) throws JsonProcessingException {
+       //initialise neighbours list
         List<Node> neighbours = new ArrayList<>();
+        //find whether the initial node is in the central area
         boolean isInCentral = isInCentralArea(current.getPosition());
+        //for each of the 16 points on a compass use next position to calculate the possible neighbours
         for (double angle = 0; angle < 360; angle += 22.5) {
             LngLat nextPosition = calculateNewPos(current.getPosition(),angle);
+            //if the old point was in the central area and the new one isnt then skip
             if (isInCentral && !isInCentralArea(nextPosition)) {
                 continue;
             }
+            //if the node isnt in a noFyZone then add it to the list with the parent as current
             if (!isInNoFlyZone(noFlyZones, nextPosition)) {
                 Node neighbour = new Node();
                 neighbour.setParent(current);
@@ -558,19 +609,24 @@ public class RestController {
         return neighbours;
     }
 
+    //reconstructs the path given a node
     private List<LngLat> reconstructPath ( Node current) {
         List<LngLat> path = new ArrayList<>();
+        //for each element in the list add it to the list and then set current to its parent
         while (current != null) {
             path.add(current.getPosition());
             current = current.getParent();
         }
+        //reverse the path and return
         Collections.reverse(path);
         return path;
     }
 
+    //calculate whether a given node should be skipped
     private boolean isNodeSkipped (Node neighbour, Collection<Node> list){
         for (Node node : list) {
             LngLat position = node.getPosition();
+            //if this position exists with a lower F it should be skipped and true is returned
             if (position.getLat().equals(neighbour.getPosition().getLat()) && position.getLng().equals(neighbour.getPosition().getLng())
                     && node.getF() <= neighbour.getF()) {
                 return true;
@@ -579,8 +635,9 @@ public class RestController {
         return false;
     }
 
-
+    //calculates whether a given position is within the central area
     private boolean isInCentralArea(LngLat position) throws JsonProcessingException {
+        //fetches the central area and creates an IsInRegionRequest
         NamedRegion centralArea = fetchCentralArea();
         IsInRegionRequest request = new IsInRegionRequest();
         request.setRegion(centralArea);
@@ -588,6 +645,7 @@ public class RestController {
 
         String requestJson = mapper.writeValueAsString(request);
 
+        //utilise isInRegion to find if the position is in the central area
         if (Boolean.TRUE.equals(isInRegion(requestJson).getBody())) {
             return true;
         }
