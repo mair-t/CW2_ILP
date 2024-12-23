@@ -465,8 +465,9 @@ public class RestController {
             System.out.println("returned" + neighbours.size() + " neighbours");
 
             for (Node neighbour : neighbours) {
-                if (getDistanceBetween(neighbour.getPosition(), endPos) <0.0015){
-                    List<LngLat> path = reconstructPath(current);
+                if (getDistanceBetween(neighbour.getPosition(), endPos) <0.00015){
+                    List<LngLat> path = reconstructPath(neighbour);
+                    System.out.println(getDistanceBetween(neighbour.getPosition(), endPos));
                     return path;
                 }
                 else{
@@ -524,8 +525,12 @@ public class RestController {
 
     private List<Node> getNeighbours(Node current,List<NamedRegion> noFlyZones) throws JsonProcessingException {
         List<Node> neighbours = new ArrayList<>();
+        boolean isInCentral = isInCentralArea(current.getPosition());
         for (double angle = 0; angle < 360; angle += 22.5) {
             LngLat nextPosition = calculateNewPos(current.getPosition(),angle);
+            if (isInCentral && !isInCentralArea(nextPosition)) {
+                continue;
+            }
             if (!isInNoFlyZone(noFlyZones, nextPosition)) {
                 Node neighbour = new Node();
                 neighbour.setParent(current);
