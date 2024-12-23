@@ -462,6 +462,7 @@ public class RestController {
             Node current = openSet.poll();
 
             List<Node> neighbours = getNeighbours(current, noFlyZones);
+            System.out.println("returned" + neighbours.size() + " neighbours");
 
             for (Node neighbour : neighbours) {
                 if (getDistanceBetween(neighbour.getPosition(), endPos) <0.0015){
@@ -469,7 +470,7 @@ public class RestController {
                     return path;
                 }
                 else{
-                    g = current.getG()+ MOVEMENT;
+                    g = neighbour.getParent().getG()+ MOVEMENT;
                     h = getDistanceBetween(neighbour.getPosition(), endPos);
                     neighbour.setG(current.getG() + MOVEMENT);
                     neighbour.setF(g,h);
@@ -481,6 +482,7 @@ public class RestController {
                     }
                     openSet.add(neighbour);
                     System.out.println("added Node to open");
+                    System.out.println(neighbour.getF());
                 }
             }
             closedSet.add(current);
@@ -548,7 +550,8 @@ public class RestController {
     private boolean isNodeSkipped (Node neighbour, Collection<Node> list){
         for (Node node : list) {
             LngLat position = node.getPosition();
-            if (position.equals(neighbour.getPosition()) && node.getF() <= neighbour.getF()) {
+            if (position.getLat().equals(neighbour.getPosition().getLat()) && position.getLng().equals(neighbour.getPosition().getLng())
+                    && node.getF() <= neighbour.getF()) {
                 return true;
             }
         }
