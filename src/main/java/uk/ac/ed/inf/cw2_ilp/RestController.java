@@ -189,28 +189,37 @@ public class RestController {
         }
     }
 
+   // calculates whether the order is valid, updates OrderValidationResult and returns it
     @PostMapping("/validateOrder")
     public ResponseEntity<OrderValidationResult> validateOrder(@RequestBody String orderRequest) throws JsonProcessingException {
         Order currentOrder;
+
+        //If the order isn't a valid string returns an error
         if (isntValidString(orderRequest)) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
+
+        //map input to order class
         currentOrder = mapper.readValue(orderRequest, Order.class);
+
+        //set the code as undefined as we have not defined it
         currentOrder.setOrderValidationCode(OrderValidationResult.UNDEFINED);
         CreditCardInformation creditCardInformation = currentOrder.getCreditCardInformation();
         Pizza[] pizzas = currentOrder.getPizzasInOrder();
 
+        //call method to check credit card information, if there is an error return this
         if(creditCardCheck(creditCardInformation, currentOrder) != OrderValidationResult.NO_ERROR){
             return ResponseEntity.ok(creditCardCheck(creditCardInformation, currentOrder));
         }
+        //call method to check pizza and restaurant information, return the error if found
         if(pizzaCheck(pizzas, currentOrder) != OrderValidationResult.NO_ERROR){
             return ResponseEntity.ok(pizzaCheck(pizzas, currentOrder));
         }
-
+        // if no error has been found, return no error
         return ResponseEntity.ok(OrderValidationResult.NO_ERROR);
 
     }
-
+    //
     @PostMapping("calcDeliveryPath")
     public ResponseEntity<LngLat[]> calcDeliveryPath(@RequestBody String orderRequest) throws JsonProcessingException {
         Order currentOrder;
@@ -232,6 +241,13 @@ public class RestController {
 
 
         return ResponseEntity.ok(path);
+    }
+
+    @PostMapping("calcDeliveryPathAsGeoJson")
+    public ResponseEntity<String> calcDeliveryPathAsGeoJson(@RequestBody String orderRequest) throws JsonProcessingException {
+        LngLat[] path = calcDeliveryPath(orderRequest).getBody();
+        String result = path.toString();
+        return ResponseEntity.ok(result);
     }
 
 
