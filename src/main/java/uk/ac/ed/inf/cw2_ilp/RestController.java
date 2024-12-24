@@ -252,8 +252,32 @@ public class RestController {
     @PostMapping("calcDeliveryPathAsGeoJson")
     public ResponseEntity<String> calcDeliveryPathAsGeoJson(@RequestBody String orderRequest) throws JsonProcessingException {
         LngLat[] path = calcDeliveryPath(orderRequest).getBody();
-        String result = path.toString();
-        return ResponseEntity.ok(result);
+
+        if (path ==null){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+        List<double[]> coordinates = new ArrayList<>();
+        LngLat previous = null;
+
+        for (LngLat point : path) {
+            if (!point.equals(previous)) {
+                coordinates.add(new double[]{point.getLng(), point.getLat()});
+                previous = point;
+            }
+        }
+
+        Map<String, Object> geoJson = new HashMap<>();
+        geoJson.put("type", "Feature");
+
+        Map<String, Object> geometry = new HashMap<>();
+        geometry.put("type", "LineString");
+        geometry.put("coordinates", coordinates);
+
+        geoJson.put("geometry", geometry);
+
+        geoJson.put("properties", new HashMap<>());
+
+        return ResponseEntity.ok(mapper.writeValueAsString(geoJson));
     }
 
 
