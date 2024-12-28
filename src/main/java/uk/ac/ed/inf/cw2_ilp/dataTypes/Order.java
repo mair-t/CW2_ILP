@@ -5,6 +5,7 @@ import java.util.List;
 public class Order {
 
     public String orderNo;
+
     public String orderDate;
     public OrderStatus orderStatus;
     public OrderValidationResult orderValidationCode;
@@ -14,6 +15,7 @@ public class Order {
     public Pizza[] pizzasInOrder;
 
     public CreditCardInformation creditCardInformation;
+
 
     public String getDate() {
         return orderDate;

@@ -9,4 +9,6 @@ public class Pizza {
     public String getName(){
         return name;
     }
+
+    public int getPriceInPence(){return priceInPence;}
 }

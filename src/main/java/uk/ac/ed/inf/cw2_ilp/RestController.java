@@ -251,14 +251,18 @@ public class RestController {
 
     @PostMapping("calcDeliveryPathAsGeoJson")
     public ResponseEntity<String> calcDeliveryPathAsGeoJson(@RequestBody String orderRequest) throws JsonProcessingException {
+       //calculate the path using calcdeliverypath
         LngLat[] path = calcDeliveryPath(orderRequest).getBody();
 
+        //if there isn't a path return error
         if (path ==null){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
+        // initialise variables
         List<double[]> coordinates = new ArrayList<>();
         LngLat previous = null;
 
+        //for each unique point on the path add it to the list of coordinates
         for (LngLat point : path) {
             if (!point.equals(previous)) {
                 coordinates.add(new double[]{point.getLng(), point.getLat()});
@@ -266,15 +270,19 @@ public class RestController {
             }
         }
 
+        //create and fill hash maps needed for geojson format
         Map<String, Object> geoJson = new HashMap<>();
         geoJson.put("type", "Feature");
 
         Map<String, Object> geometry = new HashMap<>();
         geometry.put("type", "LineString");
+        //add the points from the path to geometry
         geometry.put("coordinates", coordinates);
 
+        //add all of geometry into geoJson
         geoJson.put("geometry", geometry);
 
+        //properties is empty for this style
         geoJson.put("properties", new HashMap<>());
 
         return ResponseEntity.ok(mapper.writeValueAsString(geoJson));
@@ -441,6 +449,9 @@ public class RestController {
         if( pizzas.length>4){
             return OrderValidationResult.MAX_PIZZA_COUNT_EXCEEDED;
         }
+        if(pizzas.length == 0 ){
+            return OrderValidationResult.EMPTY_ORDER;
+        }
         //add up the order total
         for (Pizza pizza : pizzas){
             total = total + pizza.priceInPence;
@@ -469,13 +480,25 @@ public class RestController {
             if (!validPizzas.contains(pizza.name)) {
                 return OrderValidationResult.PIZZA_NOT_DEFINED;
             }
+
             //using the name figure out which restaurant the pizza came from
             String name = pizza.getName();
             Restaurant restaurant = getRestaurantForPizza(name,restaurants);
+
+            //get the menu for this restaurant
+            Pizza[] menu = restaurant.getMenu();
+            List <String> menuPizzas = Arrays.stream(menu).map(Pizza::getName).toList();
             //if this restaurant isnt open return RESTAURANT_CLOSED
             if(!isRestaurantOpen(restaurant, currentOrder.getDate())){
                 return OrderValidationResult.RESTAURANT_CLOSED;
             }
+            //if the price on the order doesnt match the menu then return PRICE_FOR_PIZZA_INVALID
+            int index = menuPizzas.indexOf(pizza.getName());
+
+            if(pizza.getPriceInPence() != menu[index].getPriceInPence()){
+                return OrderValidationResult.PRICE_FOR_PIZZA_INVALID;
+            }
+
             //if the restaurant doesn't match the pizza before return PIZZA_FROM_MULTIPLE_RESTAURANTS
             if (firstRestaurant == null) {
                 firstRestaurant = restaurant;

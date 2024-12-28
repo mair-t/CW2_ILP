@@ -20,4 +20,6 @@ public class Restaurant {
     public LngLat getLocation() {
         return location;
     }
+
+    public Pizza[] getMenu() {return menu;}
 }
