@@ -271,10 +271,10 @@ public class RestController {
         }
 
         //create and fill hash maps needed for geojson format
-        Map<String, Object> geoJson = new HashMap<>();
+        Map<String, Object> geoJson = new LinkedHashMap<>();
         geoJson.put("type", "Feature");
 
-        Map<String, Object> geometry = new HashMap<>();
+        Map<String, Object> geometry = new LinkedHashMap<>();
         geometry.put("type", "LineString");
         //add the points from the path to geometry
         geometry.put("coordinates", coordinates);
@@ -283,7 +283,7 @@ public class RestController {
         geoJson.put("geometry", geometry);
 
         //properties is empty for this style
-        geoJson.put("properties", new HashMap<>());
+        geoJson.put("properties", new LinkedHashMap<>());
 
         return ResponseEntity.ok(mapper.writeValueAsString(geoJson));
     }
