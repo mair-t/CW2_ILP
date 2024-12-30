@@ -209,13 +209,19 @@ public class RestController {
 
         //call method to check credit card information, if there is an error return this
         if(creditCardCheck(creditCardInformation, currentOrder) != OrderValidationResult.NO_ERROR){
+            currentOrder.setOrderValidationCode(creditCardCheck(creditCardInformation, currentOrder));
+            currentOrder.setOrderStatus(OrderStatus.INVALID);
             return ResponseEntity.ok(creditCardCheck(creditCardInformation, currentOrder));
         }
         //call method to check pizza and restaurant information, return the error if found
         if(pizzaCheck(pizzas, currentOrder) != OrderValidationResult.NO_ERROR){
+            currentOrder.setOrderValidationCode(pizzaCheck(pizzas, currentOrder));
+            currentOrder.setOrderStatus(OrderStatus.INVALID);
             return ResponseEntity.ok(pizzaCheck(pizzas, currentOrder));
         }
         // if no error has been found, return no error
+        currentOrder.setOrderValidationCode(OrderValidationResult.NO_ERROR);
+        currentOrder.setOrderStatus(OrderStatus.VALID);
         return ResponseEntity.ok(OrderValidationResult.NO_ERROR);
 
     }
@@ -242,6 +248,9 @@ public class RestController {
         appletonLocation = mapper.readValue(APPLETON_COORDINATES, LngLat.class);
         //use calculate path to find the path
         List<LngLat> pathList = calculatePath(restaurantLocation,appletonLocation);
+        if (pathList ==null){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
         //format this as an array and return
         LngLat[] path = pathList.toArray(new LngLat[0]);
 
@@ -555,6 +564,7 @@ public class RestController {
         start.setPosition(startPos);
         start.setG(0);
         start.setF(0,0);
+        start.setH(getDistanceBetween(startPos, endPos));
 
         //add start to open set
         openSet.add(start);

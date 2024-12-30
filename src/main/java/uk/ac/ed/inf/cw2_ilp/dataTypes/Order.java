@@ -40,4 +40,8 @@ public class Order {
     public void setOrderValidationCode(OrderValidationResult orderValidationCode) {
         this.orderValidationCode = orderValidationCode;
     }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
 }

@@ -5,6 +5,7 @@ public class Node {
     private LngLat position;
     private double f;
     private double g;
+    private double h;
     private Node parent;
 
     public LngLat getPosition() {
@@ -34,5 +35,11 @@ public class Node {
     }
     public void setParent(Node parent) {
         this.parent = parent;
+    }
+    public double getH() {
+        return h;
+    }
+    public void setH(double h) {
+        this.h = h;
     }
 }
