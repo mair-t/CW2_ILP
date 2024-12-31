@@ -558,6 +558,7 @@ public class RestController {
 
         double h;
         double g;
+        boolean closeGap;
 
         //initialise start node
         Node start = new Node();
@@ -577,6 +578,10 @@ public class RestController {
             //return a list of neighbours of the current node
             List<Node> neighbours = getNeighbours(current, noFlyZones);
 
+            closeGap = current.getH() > (30 * MOVEMENT);
+
+            Node gapCloser = null;
+
             for (Node neighbour : neighbours) {
                 //if the neighbour is close to the goal reconstruct the path and return it
                 if (getDistanceBetween(neighbour.getPosition(), endPos) <0.00015){
@@ -590,15 +595,25 @@ public class RestController {
                     //set the G and F for the neighbour
                     neighbour.setG(current.getG() + MOVEMENT);
                     neighbour.setF(g,h);
+                    neighbour.setH(h);
 
                     //skip the node if there exists one with the same position and lower F
-                    if (isNodeSkipped(neighbour, openSet) || isNodeSkipped(neighbour, closedSet)){
+                    if (isNodeSkipped(neighbour, openSet) || isNodeSkipped(neighbour, closedSet) || current.getH()<h){
                         continue;
 
                     }
-                    //add neighbour to the open set
-                    openSet.add(neighbour);
+                    if (closeGap) {
+                        if (gapCloser == null || h < gapCloser.getH()) {
+                            gapCloser = neighbour;
+                        }
+                    } else {
+                        // Regular node expansion
+                        openSet.add(neighbour);
+                    }
                 }
+            }
+            if (closeGap && gapCloser != null) {
+                openSet.add(gapCloser);
             }
             //the current node was dealt with and can be added to closedSet
             closedSet.add(current);
