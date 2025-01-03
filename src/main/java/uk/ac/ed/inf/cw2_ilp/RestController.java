@@ -316,6 +316,7 @@ public class RestController {
             //return a list of neighbours of the current node
             List<Node> neighbours = getNeighbours(current, noFlyZones);
 
+            //if the gap is too large and will take too long set closeGap to true
             closeGap = current.getH() > (30 * Constants.MOVEMENT);
 
             Node gapCloser = null;
@@ -340,6 +341,7 @@ public class RestController {
                         continue;
 
                     }
+                    //if the gap was too large add a gapCloser node to speed things up
                     if (closeGap) {
                         if (gapCloser == null || h < gapCloser.getH()) {
                             gapCloser = neighbour;

@@ -8,10 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
 
+import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -82,21 +84,27 @@ public class Validation {
         if(!isDigitString(creditCardNumber)|| isntValidString(creditCardNumber)|| creditCardNumber.length() != 16){
             return OrderValidationResult.CARD_NUMBER_INVALID;
         }
-        //format the given date as MM/yy
-        DateTimeFormatter expiryFormatter = DateTimeFormatter.ofPattern("MM/yy");
-        YearMonth expiryYearMonth = YearMonth.parse(expiryDate, expiryFormatter);
+        try {
+            //format the given date as MM/yy
+            DateTimeFormatter expiryFormatter = DateTimeFormatter.ofPattern("MM/yy");
+            YearMonth expiryYearMonth = YearMonth.parse(expiryDate, expiryFormatter);
 
 
-        LocalDate expiry = expiryYearMonth.atEndOfMonth();
+            LocalDate expiry = expiryYearMonth.atEndOfMonth();
 
-        LocalDate orderDate = LocalDate.parse(order.getDate());
+            LocalDate orderDate = LocalDate.parse(order.getDate());
 
-        //if the expiry date is not after the order date return EXPIRY_DATE_INVALID
-        if(!expiry.isAfter(orderDate)){
+            //if the expiry date is not after the order date return EXPIRY_DATE_INVALID
+            if (!expiry.isAfter(orderDate)) {
+                return OrderValidationResult.EXPIRY_DATE_INVALID;
+            }
+            //if there are no issues return NO_ERROR
+            return OrderValidationResult.NO_ERROR;
+        }
+        catch  (DateTimeException e) {
+            // Return invalid result if date parsing fails
             return OrderValidationResult.EXPIRY_DATE_INVALID;
         }
-        //if there are no issues return NO_ERROR
-        return OrderValidationResult.NO_ERROR;
     }
 
     //checks that elements associated with pizza and restaurants are valid or returns and updates the result
