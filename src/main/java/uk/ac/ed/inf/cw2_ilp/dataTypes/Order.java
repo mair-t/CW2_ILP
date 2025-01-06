@@ -1,6 +1,4 @@
 package uk.ac.ed.inf.cw2_ilp.dataTypes;
-import java.time.LocalDate;
-import java.util.List;
 
 public class Order {
 
@@ -8,7 +6,7 @@ public class Order {
 
     public String orderDate;
     public OrderStatus orderStatus;
-    public OrderValidationResult orderValidationCode;
+    public OrderValidationCode orderValidationCode;
 
     public int priceTotalInPence;
 
@@ -24,7 +22,7 @@ public class Order {
     public OrderStatus getOrderStatus() {
         return orderStatus;
     }
-    public OrderValidationResult getOrderValidationCode() {
+    public OrderValidationCode getOrderValidationCode() {
         return orderValidationCode;
     }
     public int getPriceTotalInPence() {
@@ -37,7 +35,7 @@ public class Order {
         return creditCardInformation;
     }
 
-    public void setOrderValidationCode(OrderValidationResult orderValidationCode) {
+    public void setOrderValidationCode(OrderValidationCode orderValidationCode) {
         this.orderValidationCode = orderValidationCode;
     }
 

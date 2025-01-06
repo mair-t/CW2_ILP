@@ -6,11 +6,7 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
-import uk.ac.ed.inf.cw2_ilp.Validation.*;
-import uk.ac.ed.inf.cw2_ilp.GeometryFunctions;
-import uk.ac.ed.inf.cw2_ilp.Constants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.*;
@@ -182,6 +178,7 @@ public class RestController {
     @PostMapping("/validateOrder")
     public ResponseEntity<OrderValidationResult> validateOrder(@RequestBody String orderRequest) throws JsonProcessingException {
         Order currentOrder;
+        OrderValidationResult result = new OrderValidationResult();
 
         //If the order isn't a valid string returns an error
         if (Validation.isntValidString(orderRequest)) {
@@ -192,26 +189,26 @@ public class RestController {
         currentOrder = mapper.readValue(orderRequest, Order.class);
 
         //set the code as undefined as we have not defined it
-        currentOrder.setOrderValidationCode(OrderValidationResult.UNDEFINED);
+        currentOrder.setOrderValidationCode(OrderValidationCode.UNDEFINED);
         CreditCardInformation creditCardInformation = currentOrder.getCreditCardInformation();
         Pizza[] pizzas = currentOrder.getPizzasInOrder();
 
         //call method to check credit card information, if there is an error return this
-        if(Validation.creditCardCheck(creditCardInformation, currentOrder) != OrderValidationResult.NO_ERROR){
-            currentOrder.setOrderValidationCode(Validation.creditCardCheck(creditCardInformation, currentOrder));
-            currentOrder.setOrderStatus(OrderStatus.INVALID);
-            return ResponseEntity.ok(Validation.creditCardCheck(creditCardInformation, currentOrder));
+        if(Validation.creditCardCheck(creditCardInformation, currentOrder) != OrderValidationCode.NO_ERROR){
+            result.setOrderValidationCode(Validation.creditCardCheck(creditCardInformation, currentOrder));
+            result.setOrderStatus(OrderStatus.INVALID);
+            return ResponseEntity.ok(result);
         }
         //call method to check pizza and restaurant information, return the error if found
-        if(Validation.pizzaCheck(pizzas, currentOrder) != OrderValidationResult.NO_ERROR){
-            currentOrder.setOrderValidationCode(Validation.pizzaCheck(pizzas, currentOrder));
-            currentOrder.setOrderStatus(OrderStatus.INVALID);
-            return ResponseEntity.ok(Validation.pizzaCheck(pizzas, currentOrder));
+        if(Validation.pizzaCheck(pizzas, currentOrder) != OrderValidationCode.NO_ERROR){
+            result.setOrderValidationCode(Validation.pizzaCheck(pizzas, currentOrder));
+            result.setOrderStatus(OrderStatus.INVALID);
+            return ResponseEntity.ok(result);
         }
         // if no error has been found, return no error
-        currentOrder.setOrderValidationCode(OrderValidationResult.NO_ERROR);
-        currentOrder.setOrderStatus(OrderStatus.VALID);
-        return ResponseEntity.ok(OrderValidationResult.NO_ERROR);
+        result.setOrderValidationCode(OrderValidationCode.NO_ERROR);
+        result.setOrderStatus(OrderStatus.VALID);
+        return ResponseEntity.ok(result);
 
     }
     //
@@ -220,7 +217,7 @@ public class RestController {
         Order currentOrder;
         // validate order, if invalid then return an error
         OrderValidationResult validation = validateOrder(orderRequest).getBody();
-        if(!(validation == OrderValidationResult.NO_ERROR)){
+        if(!(validation.getOrderStatus() == OrderStatus.VALID)){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         //map order to order class

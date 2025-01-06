@@ -1,11 +1,5 @@
 package uk.ac.ed.inf.cw2_ilp;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
 
 import java.time.DateTimeException;
@@ -13,7 +7,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +63,7 @@ public class Validation {
     }
 
     //checks the credit card information to see if its valid
-    public static OrderValidationResult creditCardCheck(CreditCardInformation creditCardInformation, Order order) {
+    public static OrderValidationCode creditCardCheck(CreditCardInformation creditCardInformation, Order order) {
         //get the 3 aspects of the credit card information as strings
         String creditCardNumber = creditCardInformation.getCreditCardNumber();
         String CVV = creditCardInformation.getCvv();
@@ -78,11 +71,11 @@ public class Validation {
 
         //Check if the CVV is valid and return CVV_INVALID if not
         if(CVV.length() != 3 || isntValidString(CVV) || !isDigitString(CVV)){
-            return OrderValidationResult.CVV_INVALID;
+            return OrderValidationCode.CVV_INVALID;
         }
         //Check if the creditCardNumber is valid and return CARD_NUMBER_INVALID if not
         if(!isDigitString(creditCardNumber)|| isntValidString(creditCardNumber)|| creditCardNumber.length() != 16){
-            return OrderValidationResult.CARD_NUMBER_INVALID;
+            return OrderValidationCode.CARD_NUMBER_INVALID;
         }
         try {
             //format the given date as MM/yy
@@ -96,26 +89,26 @@ public class Validation {
 
             //if the expiry date is not after the order date return EXPIRY_DATE_INVALID
             if (!expiry.isAfter(orderDate)) {
-                return OrderValidationResult.EXPIRY_DATE_INVALID;
+                return OrderValidationCode.EXPIRY_DATE_INVALID;
             }
             //if there are no issues return NO_ERROR
-            return OrderValidationResult.NO_ERROR;
+            return OrderValidationCode.NO_ERROR;
         }
         catch  (DateTimeException e) {
             // Return invalid result if date parsing fails
-            return OrderValidationResult.EXPIRY_DATE_INVALID;
+            return OrderValidationCode.EXPIRY_DATE_INVALID;
         }
     }
 
     //checks that elements associated with pizza and restaurants are valid or returns and updates the result
-    public static  OrderValidationResult pizzaCheck(Pizza[] pizzas, Order currentOrder){
+    public static OrderValidationCode pizzaCheck(Pizza[] pizzas, Order currentOrder){
         int total = 0;
         //if there are more than 4 pizzas it is invalid
         if( pizzas.length>4){
-            return OrderValidationResult.MAX_PIZZA_COUNT_EXCEEDED;
+            return OrderValidationCode.MAX_PIZZA_COUNT_EXCEEDED;
         }
         if(pizzas.length == 0 ){
-            return OrderValidationResult.EMPTY_ORDER;
+            return OrderValidationCode.EMPTY_ORDER;
         }
         //add up the order total
         for (Pizza pizza : pizzas){
@@ -125,7 +118,7 @@ public class Validation {
         total += 100;
         // if the totals are not equal then return TOTAL_INCORRECT
         if(total != currentOrder.getPriceTotalInPence()){
-            return OrderValidationResult.TOTAL_INCORRECT;
+            return OrderValidationCode.TOTAL_INCORRECT;
         }
         //create a set of valid pizzas
         Set<String> validPizzas = new HashSet<>();
@@ -143,7 +136,7 @@ public class Validation {
         for (Pizza pizza : pizzas) {
             //if any pizza is not in the valid pizza set return PIZZA_NOT_DEFINED
             if (!validPizzas.contains(pizza.name)) {
-                return OrderValidationResult.PIZZA_NOT_DEFINED;
+                return OrderValidationCode.PIZZA_NOT_DEFINED;
             }
 
             //using the name figure out which restaurant the pizza came from
@@ -155,26 +148,26 @@ public class Validation {
             List <String> menuPizzas = Arrays.stream(menu).map(Pizza::getName).toList();
             //if this restaurant isnt open return RESTAURANT_CLOSED
             if(!isRestaurantOpen(restaurant, currentOrder.getDate())){
-                return OrderValidationResult.RESTAURANT_CLOSED;
+                return OrderValidationCode.RESTAURANT_CLOSED;
             }
             //if the price on the order doesnt match the menu then return PRICE_FOR_PIZZA_INVALID
             int index = menuPizzas.indexOf(pizza.getName());
 
             if(pizza.getPriceInPence() != menu[index].getPriceInPence()){
-                return OrderValidationResult.PRICE_FOR_PIZZA_INVALID;
+                return OrderValidationCode.PRICE_FOR_PIZZA_INVALID;
             }
 
             //if the restaurant doesn't match the pizza before return PIZZA_FROM_MULTIPLE_RESTAURANTS
             if (firstRestaurant == null) {
                 firstRestaurant = restaurant;
             } else if (!restaurant.equals(firstRestaurant)) {
-                return OrderValidationResult.PIZZA_FROM_MULTIPLE_RESTAURANTS;
+                return OrderValidationCode.PIZZA_FROM_MULTIPLE_RESTAURANTS;
             }
 
 
         }
         //else return NO_ERROR
-        return OrderValidationResult.NO_ERROR;
+        return OrderValidationCode.NO_ERROR;
     }
 
     //given a date calculate if the restaurant given is open
