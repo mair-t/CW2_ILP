@@ -27,7 +27,7 @@ public class RestController {
     @PostMapping("/distanceTo")
     public ResponseEntity<Double> getDistanceTo(@RequestBody String lngLatPair) throws JsonProcessingException {
 
-        lngLatPair LngLats;
+        LngLatPair LngLats;
         Double distance;
 
         //checks input isn't empty
@@ -37,7 +37,7 @@ public class RestController {
 
         try {
             //maps input to LngLat class
-            LngLats = mapper.readValue(lngLatPair, lngLatPair.class);
+            LngLats = mapper.readValue(lngLatPair, LngLatPair.class);
             LngLat pos_1 = LngLats.getPos1();
             LngLat pos_2 = LngLats.getPos2();
 

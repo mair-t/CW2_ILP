@@ -13,4 +13,7 @@ public class NamedRegion {
     public List<LngLat> getVertices(){
         return vertices;
     }
+    public void setVertices(List<LngLat> vertices){
+        this.vertices = vertices;
+    }
 }
