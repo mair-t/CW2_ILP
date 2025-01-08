@@ -316,7 +316,7 @@ public class RestController {
             //if the gap is too large and will take too long set closeGap to true
             closeGap = current.getH() > (30 * Constants.MOVEMENT);
 
-            Node gapCloser = null;
+            Node gapCloser;
 
             for (Node neighbour : neighbours) {
                 //if the neighbour is close to the goal reconstruct the path and return it
@@ -339,17 +339,14 @@ public class RestController {
 
                     }
                     //if the gap was too large add a gapCloser node to speed things up
-                    if (closeGap) {
-                        if (gapCloser == null || h < gapCloser.getH()) {
-                            gapCloser = neighbour;
-                        }
-                    } else {
-                        // Regular node expansion
+                    if (!closeGap) {
                         openSet.add(neighbour);
+
                     }
                 }
             }
-            if (closeGap && gapCloser != null) {
+            if (closeGap ) {
+                gapCloser = Collections.min(neighbours, Comparator.comparingDouble(Node::getH));
                 openSet.add(gapCloser);
             }
             //the current node was dealt with and can be added to closedSet
@@ -389,6 +386,7 @@ public class RestController {
     //reconstructs the path given a node
     public  List<LngLat> reconstructPath(Node current) {
         List<LngLat> path = new ArrayList<>();
+
         //for each element in the list add it to the list and then set current to its parent
         while (current != null) {
             path.add(current.getPosition());
@@ -447,15 +445,6 @@ public class RestController {
 
         return false;
     }
-
-
-
-
-
-
-
-
-
 
 
 
