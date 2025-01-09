@@ -51,4 +51,8 @@ public class Order {
     public void setPizzasInOrder(Pizza[] pizzasInOrder) {
         this.pizzasInOrder = pizzasInOrder;
     }
+
+    public void setCreditCardInformation(CreditCardInformation creditCardInformation) {
+        this.creditCardInformation = creditCardInformation;
+    }
 }

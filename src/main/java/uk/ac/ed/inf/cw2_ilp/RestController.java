@@ -359,7 +359,7 @@ public class RestController {
     }
 
     //retrieve all valid neighbours for a node
-    private  List<Node> getNeighbours(Node current,List<NamedRegion> noFlyZones) throws JsonProcessingException {
+    public  List<Node> getNeighbours(Node current,List<NamedRegion> noFlyZones) throws JsonProcessingException {
         //initialise neighbours list
         List<Node> neighbours = new ArrayList<>();
         //find whether the initial node is in the central area

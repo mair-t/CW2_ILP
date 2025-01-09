@@ -2,7 +2,11 @@ package uk.ac.ed.inf.cw2_ilp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
@@ -13,12 +17,17 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 
 public class ControllerTests {
 
     RestController restController = new RestController();
     ObjectMapper mapper = new ObjectMapper();
     Random random = new Random();
+
+
+
 
     @Test
     public void getUUIDTest(){
@@ -492,6 +501,23 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    @Test
+    public void calculatePath() throws JsonProcessingException {
+        List <NamedRegion> noFlyZones = FetchFunctions.fetchNoFlyZones();
+        LngLat start = generateEdiLngLat();
+        LngLat end = generateEdiLngLat();
+        boolean valid = true;
+
+        List<LngLat> path = restController.calculatePath(start, end);
+
+        for(LngLat point: path){
+            if(restController.isInNoFlyZone(noFlyZones, point)){
+                valid = false;
+            }
+        }
+        assertTrue(valid);
+    }
+
     private LngLat generateRandomLngLat(){
         Double lng = random.nextDouble(180-(-180))-180;
         Double lat = random.nextDouble(90-(-90))-90;
@@ -508,6 +534,18 @@ public class ControllerTests {
         test.setLat(lat);
         return test;
 
+    }
+
+    private LngLat generateEdiLngLat(){
+        double centerLng = -3.186874;
+        double centerLat = 55.944494;
+
+        double lng = centerLng + (random.nextDouble() * 0.10 - 0.05);
+        double lat = centerLat + (random.nextDouble() * 0.10 - 0.05);
+        LngLat test = new LngLat();
+        test.setLng(lng);
+        test.setLat(lat);
+        return test;
     }
     private LngLatPair generateRandomLngLatPair() {
         LngLat pos1;
