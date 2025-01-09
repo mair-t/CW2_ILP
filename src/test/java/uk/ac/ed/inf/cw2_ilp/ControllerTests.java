@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatusCode;
 import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -44,6 +45,21 @@ public class ControllerTests {
     }
 
     @Test
+    public void distanceToTest_SameInput() throws JsonProcessingException {
+        LngLat test = generateRandomLngLat();
+
+        LngLatPair testPair = new LngLatPair();
+        testPair.setPos1(test);
+        testPair.setPos2(test);
+
+        Double result = restController.getDistanceTo(mapper.writeValueAsString(testPair)).getBody();
+        Double expected = 0.0;
+        assertEquals(expected, result);
+
+
+    }
+
+    @Test
     public void distanceToTest_MissingPosition() throws JsonProcessingException {
         LngLat test1 = generateRandomLngLat();
         LngLatPair testPair = new LngLatPair();
@@ -70,6 +86,20 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    @Test
+    public void distanceToTest_EmptyCall() throws JsonProcessingException {
+        LngLat test1 = new LngLat();
+        LngLat test2 = new LngLat();
+        LngLatPair testPair = new LngLatPair();
+        testPair.setPos1(test1);
+        testPair.setPos2(test2);
+
+        HttpStatusCode result = restController.getDistanceTo(mapper.writeValueAsString(testPair)).getStatusCode();
+
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+
+
+    }
     @Test
     public void distanceToTest_EmptyInput() throws JsonProcessingException {
         HttpStatusCode result = restController.getDistanceTo(mapper.writeValueAsString("")).getStatusCode();
@@ -119,6 +149,20 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
 
     }
+    @Test
+    public void isCloseToTest_EmptyCall() throws JsonProcessingException {
+        LngLat test1 = new LngLat();
+        LngLat test2 = new LngLat();
+        LngLatPair testPair = new LngLatPair();
+        testPair.setPos1(test1);
+        testPair.setPos2(test2);
+
+        HttpStatusCode result = restController.getDistanceTo(mapper.writeValueAsString(testPair)).getStatusCode();
+
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+
+
+    }
 
     @Test
     public void isCloseToTest_EmptyInput() throws JsonProcessingException {
@@ -143,6 +187,48 @@ public class ControllerTests {
         expected.setLng(position.getLng() + lngChange);
         String expectedValue = mapper.writeValueAsString(expected);
         assertEquals(expectedValue, result);
+
+    }
+    @Test
+    public void nextPositionTest_EdgeAngle() throws JsonProcessingException {
+        LngLat position = generateRandomLngLat();
+        double angle = 360;
+        NextPositionRequest test = new NextPositionRequest();
+        test.setStart(position);
+        test.setAngle(angle);
+        String result = restController.nextPosition(mapper.writeValueAsString(test)).getBody();
+        HttpStatusCode code = restController.nextPosition(mapper.writeValueAsString(test)).getStatusCode();
+
+        LngLat expected = new LngLat();
+
+        expected.setLat(position.getLat() + Constants.MOVEMENT);
+        expected.setLng(position.getLng());
+        String expectedValue = mapper.writeValueAsString(expected);
+        assertEquals(expectedValue, result);
+        assertEquals(HttpStatus.OK, code);
+
+    }
+    @Test
+    public void nextPositionTest_EdgePosition() throws JsonProcessingException {
+        LngLat position = new LngLat();
+        position.setLat(-90.0);
+        position.setLng(180.0);
+        double angle = generateRandomAngle();
+        NextPositionRequest test = new NextPositionRequest();
+        test.setStart(position);
+        test.setAngle(angle);
+        String result = restController.nextPosition(mapper.writeValueAsString(test)).getBody();
+        HttpStatusCode code = restController.nextPosition(mapper.writeValueAsString(test)).getStatusCode();
+
+        LngLat expected = new LngLat();
+        double latChange = Constants.MOVEMENT * Math.cos(Math.toRadians(angle));
+        double lngChange = Constants.MOVEMENT * Math.sin(Math.toRadians(angle));
+
+        expected.setLat(position.getLat() + latChange);
+        expected.setLng(position.getLng() + lngChange);
+        String expectedValue = mapper.writeValueAsString(expected);
+        assertEquals(expectedValue, result);
+        assertEquals(HttpStatus.OK, code);
 
     }
 
@@ -185,10 +271,18 @@ public class ControllerTests {
         HttpStatusCode result = restController.nextPosition(mapper.writeValueAsString(test)).getStatusCode();
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
+
+    @Test
+    public void nextPositionTest_EmptyCall() throws JsonProcessingException {
+        LngLat position = new LngLat();
+        NextPositionRequest test = new NextPositionRequest();
+        test.setStart(position);
+        HttpStatusCode result = restController.nextPosition(mapper.writeValueAsString(test)).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+    }
     @Test
     public void nextPositionTest_EmptyInput() throws JsonProcessingException {
-        NextPositionRequest test = new NextPositionRequest();
-        HttpStatusCode result = restController.nextPosition(mapper.writeValueAsString(test)).getStatusCode();
+        HttpStatusCode result = restController.nextPosition("").getStatusCode();
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
     @Test
@@ -212,6 +306,98 @@ public class ControllerTests {
         // Check if the point is inside using the isInPolygon function
         boolean isInside = GeometryFunctions.isInPolygon(numVertices, vertLng, vertLat, position.getLng(), position.getLat());
         assertEquals(isInside, result);
+
+    }
+    @Test
+    public void isInRegionTest_ValidInside() throws JsonProcessingException {
+        NamedRegion region = new NamedRegion();
+        LngLat vertex1 = new LngLat();
+        vertex1.setLat(-5.0);
+        vertex1.setLng(-5.0);
+        LngLat vertex2 = new LngLat();
+        vertex2.setLat(5.0);
+        vertex2.setLng(-5.0);
+        LngLat vertex3 = new LngLat();
+        vertex3.setLat(5.0);
+        vertex3.setLng(5.0);
+        LngLat vertex4 = new LngLat();
+        vertex4.setLat(-5.0);
+        vertex4.setLng(5.0);
+        region.setVertices(Arrays.asList(vertex1, vertex2, vertex3, vertex4, vertex1));
+
+        LngLat position = new LngLat();
+        position.setLat(0.0);
+        position.setLng(0.0);
+
+        IsInRegionRequest test = new IsInRegionRequest();
+        test.setRegion(region);
+        test.setPosition(position);
+
+        boolean result = Boolean.TRUE.equals(restController.isInRegion(mapper.writeValueAsString(test)).getBody());
+
+        assertEquals(result, Boolean.TRUE);
+
+    }
+
+    @Test
+    public void isInRegionTest_ValidOutside() throws JsonProcessingException {
+        NamedRegion region = new NamedRegion();
+        LngLat vertex1 = new LngLat();
+        vertex1.setLat(-5.0);
+        vertex1.setLng(-5.0);
+        LngLat vertex2 = new LngLat();
+        vertex2.setLat(5.0);
+        vertex2.setLng(-5.0);
+        LngLat vertex3 = new LngLat();
+        vertex3.setLat(5.0);
+        vertex3.setLng(5.0);
+        LngLat vertex4 = new LngLat();
+        vertex4.setLat(-5.0);
+        vertex4.setLng(5.0);
+        region.setVertices(Arrays.asList(vertex1, vertex2, vertex3, vertex4, vertex1));
+
+        LngLat position = new LngLat();
+        position.setLat(10.0);
+        position.setLng(10.0);
+
+        IsInRegionRequest test = new IsInRegionRequest();
+        test.setRegion(region);
+        test.setPosition(position);
+
+        boolean result = Boolean.TRUE.equals(restController.isInRegion(mapper.writeValueAsString(test)).getBody());
+
+        assertEquals(result, Boolean.FALSE);
+
+    }
+
+    @Test
+    public void isInRegionTest_ValidEdge() throws JsonProcessingException {
+        NamedRegion region = new NamedRegion();
+        LngLat vertex1 = new LngLat();
+        vertex1.setLat(-5.0);
+        vertex1.setLng(-5.0);
+        LngLat vertex2 = new LngLat();
+        vertex2.setLat(5.0);
+        vertex2.setLng(-5.0);
+        LngLat vertex3 = new LngLat();
+        vertex3.setLat(5.0);
+        vertex3.setLng(5.0);
+        LngLat vertex4 = new LngLat();
+        vertex4.setLat(-5.0);
+        vertex4.setLng(5.0);
+        region.setVertices(Arrays.asList(vertex1, vertex2, vertex3, vertex4, vertex1));
+
+        LngLat position = new LngLat();
+        position.setLat(2.0);
+        position.setLng(-2.0);
+
+        IsInRegionRequest test = new IsInRegionRequest();
+        test.setRegion(region);
+        test.setPosition(position);
+
+        boolean result = Boolean.TRUE.equals(restController.isInRegion(mapper.writeValueAsString(test)).getBody());
+
+        assertEquals(result, Boolean.TRUE);
 
     }
 
@@ -260,6 +446,49 @@ public class ControllerTests {
         test.setPosition(position);
 
         HttpStatusCode result = restController.isInRegion(mapper.writeValueAsString(test)).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+    }
+
+    @Test
+    public void isInRegionTest_MissingPosition() throws JsonProcessingException {
+        NamedRegion region = generateRandomValidRegion();
+        LngLat position = new LngLat();
+        IsInRegionRequest test = new IsInRegionRequest();
+        test.setRegion(region);
+        test.setPosition(position);
+
+        HttpStatusCode result = restController.isInRegion(mapper.writeValueAsString(test)).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+    }
+
+    @Test
+    public void isInRegionTest_MissingRegion() throws JsonProcessingException {
+        NamedRegion region = new NamedRegion();
+        LngLat position = generateRandomLngLat();
+        IsInRegionRequest test = new IsInRegionRequest();
+        test.setRegion(region);
+        test.setPosition(position);
+
+        HttpStatusCode result = restController.isInRegion(mapper.writeValueAsString(test)).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+    }
+
+    @Test
+    public void isInRegionTest_EmptyCall() throws JsonProcessingException {
+        NamedRegion region = new NamedRegion();
+        LngLat position = new LngLat();
+        IsInRegionRequest test = new IsInRegionRequest();
+        test.setRegion(region);
+        test.setPosition(position);
+
+        HttpStatusCode result = restController.isInRegion(mapper.writeValueAsString(test)).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+    }
+
+    @Test
+    public void isInRegionTest_EmptyString() throws JsonProcessingException {
+
+        HttpStatusCode result = restController.isInRegion("").getStatusCode();
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 

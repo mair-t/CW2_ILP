@@ -56,7 +56,7 @@ public class GeometryFunctions {
     }
 
     //checks whether a point is on a line between two vertices, returns result as a boolean
-    private static boolean isPointOnLine(double pointLng, double pointLat, double Lng1, double Lat1, double Lng2, double Lat2) {
+    public static boolean isPointOnLine(double pointLng, double pointLat, double Lng1, double Lat1, double Lng2, double Lat2) {
 
         //calculate the area of the triangle formed by the points
         double area = 0.5 * Math.abs(Lng1 * (Lat2 - pointLat) + Lng2 * (pointLat - Lat1) + pointLng * (Lat1 - Lat2));
