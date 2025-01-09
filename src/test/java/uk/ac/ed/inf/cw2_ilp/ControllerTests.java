@@ -518,6 +518,85 @@ public class ControllerTests {
         assertTrue(valid);
     }
 
+    @Test
+    public void generateNeighboursTest() throws JsonProcessingException {
+        List <NamedRegion> noFlyZones = FetchFunctions.fetchNoFlyZones();
+        Node test  = new Node();
+        test.setPosition(generateEdiLngLat());
+        boolean result = true;
+
+        List<Node> neighbours = restController.getNeighbours(test,noFlyZones);
+        for(Node neighbour: neighbours){
+            if(restController.isInNoFlyZone(noFlyZones, neighbour.getPosition())){
+                result = false;
+            }
+            if(!Validation.isValidPosition(neighbour.getPosition())){
+                result = false;
+            }
+        }
+        assertTrue(result);
+    }
+
+    @Test
+    public void isNodeSkippedTest_IsSkipped() throws JsonProcessingException {
+        Node neighbour = new Node();
+        LngLat point = new LngLat();
+        point.setLng(-3.186874);
+        point.setLat(55.944494);
+        neighbour.setPosition(point); // Example coordinates
+        neighbour.setF(10, 10);
+
+        Node existingNode = new Node();
+        existingNode.setPosition(point);
+        existingNode.setF(5, 5);
+
+        List<Node> nodeList = new ArrayList<>();
+        nodeList.add(existingNode);
+
+        assertTrue(restController.isNodeSkipped(neighbour, nodeList));
+    }
+
+    @Test
+    public void isNodeSkippedTest_HigherF() throws JsonProcessingException {
+        Node neighbour = new Node();
+        LngLat point = new LngLat();
+        point.setLng(-3.186874);
+        point.setLat(55.944494);
+        neighbour.setPosition(point); // Example coordinates
+        neighbour.setF(10, 10);
+
+        Node existingNode = new Node();
+        existingNode.setPosition(point);
+        existingNode.setF(20, 20);
+
+        List<Node> nodeList = new ArrayList<>();
+        nodeList.add(existingNode);
+
+        assertFalse(restController.isNodeSkipped(neighbour, nodeList));
+    }
+
+    @Test
+    public void isNodeSkippedTest_DifferentPos() throws JsonProcessingException {
+        Node neighbour = new Node();
+        LngLat point = new LngLat();
+        point.setLng(-3.186874);
+        point.setLat(55.944494);
+        neighbour.setPosition(point); // Example coordinates
+        neighbour.setF(10, 10);
+
+        Node existingNode = new Node();
+        LngLat pos = new LngLat();
+        pos.setLng(-3.186734);
+        pos.setLat(55.944454);
+        existingNode.setPosition(pos);
+        existingNode.setF(10, 10);
+
+        List<Node> nodeList = new ArrayList<>();
+        nodeList.add(existingNode);
+
+        assertFalse(restController.isNodeSkipped(neighbour, nodeList));
+    }
+
     private LngLat generateRandomLngLat(){
         Double lng = random.nextDouble(180-(-180))-180;
         Double lat = random.nextDouble(90-(-90))-90;
