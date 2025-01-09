@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class GeometryTests {
 
     Random random = new Random();
-
+//getdistanceBetween tests
     @Test
     public void getDistanceBetweenTest()  {
         LngLat pos1 = new LngLat();
@@ -27,6 +27,7 @@ public class GeometryTests {
         double result = GeometryFunctions.getDistanceBetween(pos1, pos2);
         assertEquals(expected, result, 1e-6);
     }
+    //if they are the same point it should return zero
     @Test
     public void getDistanceBetweenTest_SamePoint(){
         LngLat pos1 = new LngLat();
@@ -42,6 +43,7 @@ public class GeometryTests {
         double result = GeometryFunctions.getDistanceBetween(pos1, pos2);
         assertEquals(expected, result, 1e-6);
     }
+    //ensures it works correctly with negative numbers
     @Test
     public void getDistanceBetweenTest_Negatives()  {
         LngLat pos1 = new LngLat();
@@ -57,6 +59,7 @@ public class GeometryTests {
         double result = GeometryFunctions.getDistanceBetween(pos1, pos2);
         assertEquals(expected, result, 1e-6);
     }
+    //chooses random values to test
     @Test
     public void getDistanceBetweenTest_Random()  {
         LngLat pos1 = generateRandomLngLat();
@@ -76,6 +79,7 @@ public class GeometryTests {
 
         assertEquals(expected, result, 1e-6);
     }
+    //calculate new pos with an angle of 0
     @Test
     public void calculateNewPosTest_ZeroAngle() {
         LngLat start = generateRandomLngLat();
@@ -90,6 +94,7 @@ public class GeometryTests {
         assertEquals(expected.getLng(), result.getLng());
     }
 
+    //calculate new pos with an angle of 90
     @Test
     public void calculateNewPosTest_90Angle() {
         LngLat start = generateRandomLngLat();
@@ -104,6 +109,7 @@ public class GeometryTests {
         assertEquals(expected.getLng(), result.getLng());
     }
 
+    //calculate new pos with an angle of 180
     @Test
     public void calculateNewPosTest_180Angle() {
         LngLat start = generateRandomLngLat();
@@ -117,6 +123,8 @@ public class GeometryTests {
         assertEquals(expected.getLat(), result.getLat());
         assertEquals(expected.getLng(), result.getLng());
     }
+
+    //calculate new pos with a random angle
     @Test
     public void calculateNewPosTest_RandomAngle() {
         LngLat start = generateRandomLngLat();
@@ -134,6 +142,7 @@ public class GeometryTests {
         assertEquals(expected.getLng(), result.getLng());
     }
 
+    //isInPolygon with a point inside the polygon
     @Test
     public void isInPolygonTest_PointInside(){
         double[] vertLng = {-5.0, 5.0, 5.0, -5.0};
@@ -147,6 +156,7 @@ public class GeometryTests {
         assertTrue(result);
     }
 
+    //is InPolygon with a point outside the polygon
     @Test
     public void isInPolygonTest_PointOutside(){
         double[] vertLng = {-5.0, 5.0, 5.0, -5.0};
@@ -160,6 +170,7 @@ public class GeometryTests {
         assertFalse(result);
     }
 
+    //isInPolygon where the point is on an edge
     @Test
     public void isInPolygonTest_PointOnLine(){
         double[] vertLng = {-5.0, 5.0, 5.0, -5.0};
@@ -173,6 +184,7 @@ public class GeometryTests {
         assertTrue(result);
     }
 
+    //isInPolygon where the point is on a vertex
     @Test
     public void isInPolygonTest_PointOnVertex() {
 
@@ -187,6 +199,7 @@ public class GeometryTests {
         assertTrue(result);
     }
 
+    //isInPolygon where the point is colinear but not inside the polygon
     @Test
     public void isInPolygonTest_CollinearPoint() {
         double[] vertLng = {-5.0, 5.0, 5.0, -5.0};
@@ -199,6 +212,8 @@ public class GeometryTests {
         boolean result = GeometryFunctions.isInPolygon(numVert, vertLng, vertLat, pointLng, pointLat);
         assertFalse(result);
     }
+
+    //isPointOnLine where the point is on it
     @Test
     public void isPointOnLineTest_OnLine(){
         double Lng1 = 0.0;
@@ -215,6 +230,7 @@ public class GeometryTests {
 
     }
 
+    //isPointOnLine where the point is not on it
     @Test
     public void isPointOnLineTest_OffLine(){
         double Lng1 = 0.0;
@@ -231,6 +247,7 @@ public class GeometryTests {
 
     }
 
+    //isPointOnLine where the point is colinear but not on the line
     @Test
     public void isPointOnLineTest_ColinearPoint(){
         double Lng1 = 0.0;
@@ -246,6 +263,7 @@ public class GeometryTests {
         assertFalse(result);
 
     }
+    //isPointOnLine where the point is the end point
     @Test
     public void isPointOnLineTest_EndPoint(){
         double Lng1 = 0.0;
@@ -262,6 +280,7 @@ public class GeometryTests {
 
     }
 
+    //isPointOnLine where the point close but not on the line
     @Test
     public void isPointOnLineTest_ClosePoint(){
         double Lng1 = 0.0;
@@ -279,6 +298,7 @@ public class GeometryTests {
     }
 
 
+    //generate a random valid LngLat
 
     private LngLat generateRandomLngLat(){
         Double lng = random.nextDouble(180-(-180))-180;
@@ -288,6 +308,8 @@ public class GeometryTests {
         test.setLat(lat);
         return test;
     }
+
+    //generate a random valid angle
     private double generateRandomAngle(){
         return random.nextDouble()*360;
     }

@@ -7,8 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.test.web.servlet.MockMvc;
 import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
 
 import java.util.ArrayList;
@@ -18,6 +20,8 @@ import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 public class ControllerTests {
@@ -28,7 +32,7 @@ public class ControllerTests {
 
 
 
-
+//uuid test
     @Test
     public void getUUIDTest(){
         String result = restController.getUuid().getBody();
@@ -37,6 +41,7 @@ public class ControllerTests {
         assertEquals(result, myUUID);
     }
 
+    //distanceTo tests
     @Test
     public void distanceToTest_ValidInput() throws JsonProcessingException {
         LngLatPair test = generateRandomLngLatPair();
@@ -53,6 +58,7 @@ public class ControllerTests {
 
     }
 
+    //if both points are the same it should return 0
     @Test
     public void distanceToTest_SameInput() throws JsonProcessingException {
         LngLat test = generateRandomLngLat();
@@ -68,6 +74,7 @@ public class ControllerTests {
 
     }
 
+    //if a position is missing it should return an error
     @Test
     public void distanceToTest_MissingPosition() throws JsonProcessingException {
         LngLat test1 = generateRandomLngLat();
@@ -81,6 +88,7 @@ public class ControllerTests {
 
     }
 
+    //if a position is invalid it should return an error
     @Test
     public void distanceToTest_InvalidPosition() throws JsonProcessingException {
         LngLat test1 = generateRandomLngLat();
@@ -95,6 +103,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //if the call is empty it should return an error
     @Test
     public void distanceToTest_EmptyCall() throws JsonProcessingException {
         LngLat test1 = new LngLat();
@@ -109,6 +118,8 @@ public class ControllerTests {
 
 
     }
+
+    //if an empty string is inputted it should return an error
     @Test
     public void distanceToTest_EmptyInput() throws JsonProcessingException {
         HttpStatusCode result = restController.getDistanceTo(mapper.writeValueAsString("")).getStatusCode();
@@ -116,6 +127,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //isCloseTo tests
     @Test
     public void isCloseToTest_ValidInput() throws JsonProcessingException {
         LngLatPair test = generateRandomLngLatPair();
@@ -132,6 +144,7 @@ public class ControllerTests {
 
     }
 
+    //if a position is missing it should return an error
     @Test
     public void isCloseToTest_MissingPosition() throws JsonProcessingException {
         LngLat test1 = generateRandomLngLat();
@@ -145,6 +158,7 @@ public class ControllerTests {
 
     }
 
+    //if a position is invalid it should return an error
     @Test
     public void isCloseToTest_InvalidPosition() throws JsonProcessingException {
         LngLat test1 = generateRandomLngLat();
@@ -158,6 +172,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
 
     }
+    //if the call is empty it should return an error
     @Test
     public void isCloseToTest_EmptyCall() throws JsonProcessingException {
         LngLat test1 = new LngLat();
@@ -173,12 +188,14 @@ public class ControllerTests {
 
     }
 
+    //if the input is an empty string it should return an error
     @Test
     public void isCloseToTest_EmptyInput() throws JsonProcessingException {
         HttpStatusCode result = restController.isCloseTo(mapper.writeValueAsString("")).getStatusCode();
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //nextPosition tests
     @Test
     public void nextPositionTest_ValidInput() throws JsonProcessingException {
         LngLat position = generateRandomLngLat();
@@ -198,6 +215,8 @@ public class ControllerTests {
         assertEquals(expectedValue, result);
 
     }
+
+    //testing it works if the angle is on the edge of acceptable
     @Test
     public void nextPositionTest_EdgeAngle() throws JsonProcessingException {
         LngLat position = generateRandomLngLat();
@@ -217,6 +236,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.OK, code);
 
     }
+    //testing it works if a position is on the edge of valid
     @Test
     public void nextPositionTest_EdgePosition() throws JsonProcessingException {
         LngLat position = new LngLat();
@@ -241,6 +261,7 @@ public class ControllerTests {
 
     }
 
+    //if the position is invalid an error should be returned
     @Test
     public void nextPositionTest_InvalidPosition() throws JsonProcessingException {
         LngLat position = generateInvalidLngLat();
@@ -252,6 +273,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
 
     }
+    //if the angle is invalid an error should be returned
     @Test
     public void nextPositionTest_InvalidAngle() throws JsonProcessingException {
         LngLat position = generateRandomLngLat();
@@ -263,6 +285,8 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
 
     }
+
+    //if the position is missing it should return an error
     @Test
     public void nextPositionTest_MissingPosition() throws JsonProcessingException {
         double angle = generateRandomAngle();
@@ -272,6 +296,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //if the angle is missing it should return an error
     @Test
     public void nextPositionTest_MissingAngle() throws JsonProcessingException {
         LngLat position = generateRandomLngLat();
@@ -281,6 +306,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //if the call is empty it should return an error
     @Test
     public void nextPositionTest_EmptyCall() throws JsonProcessingException {
         LngLat position = new LngLat();
@@ -289,11 +315,13 @@ public class ControllerTests {
         HttpStatusCode result = restController.nextPosition(mapper.writeValueAsString(test)).getStatusCode();
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
+    //if the string is empty it should return an error
     @Test
     public void nextPositionTest_EmptyInput() throws JsonProcessingException {
         HttpStatusCode result = restController.nextPosition("").getStatusCode();
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
+    //isInRegion tests
     @Test
     public void isInRegionTest_ValidInput() throws JsonProcessingException {
         NamedRegion region = generateRandomValidRegion();
@@ -312,11 +340,12 @@ public class ControllerTests {
             vertLat[i] = vertex.getLat();
         }
 
-        // Check if the point is inside using the isInPolygon function
         boolean isInside = GeometryFunctions.isInPolygon(numVertices, vertLng, vertLat, position.getLng(), position.getLat());
         assertEquals(isInside, result);
 
     }
+
+    // A valid input that should be inside the polygon
     @Test
     public void isInRegionTest_ValidInside() throws JsonProcessingException {
         NamedRegion region = new NamedRegion();
@@ -348,6 +377,7 @@ public class ControllerTests {
 
     }
 
+    //a valid input that should return outside
     @Test
     public void isInRegionTest_ValidOutside() throws JsonProcessingException {
         NamedRegion region = new NamedRegion();
@@ -379,6 +409,7 @@ public class ControllerTests {
 
     }
 
+    //a point on the edge of the polygon which should return true
     @Test
     public void isInRegionTest_ValidEdge() throws JsonProcessingException {
         NamedRegion region = new NamedRegion();
@@ -410,6 +441,7 @@ public class ControllerTests {
 
     }
 
+    //If the region isn't closed it should return an error
     @Test
     public void isInRegionTest_OpenRegion() throws JsonProcessingException {
         NamedRegion region = generateRandomOpenRegion();
@@ -422,6 +454,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
 
     }
+    //if the region has less than 3 points it should return an error
     @Test
     public void isInRegionTest_SmallRegion() throws JsonProcessingException {
         NamedRegion region = generateRandomSmallRegion();
@@ -434,6 +467,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //if the points in the region aren't valid there should be an error
     @Test
     public void isInRegionTest_InvalidRegion() throws JsonProcessingException {
         NamedRegion region = generateRandomInvalidRegion();
@@ -446,6 +480,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //if the position is invalid there should be an error returned
     @Test
     public void isInRegionTest_InvalidPosition() throws JsonProcessingException {
         NamedRegion region = generateRandomValidRegion();
@@ -458,6 +493,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //if there isn't a position it should return an error
     @Test
     public void isInRegionTest_MissingPosition() throws JsonProcessingException {
         NamedRegion region = generateRandomValidRegion();
@@ -470,6 +506,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //if there isnt a region it should return an error
     @Test
     public void isInRegionTest_MissingRegion() throws JsonProcessingException {
         NamedRegion region = new NamedRegion();
@@ -482,6 +519,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //if the call is empty it shoudl return an error
     @Test
     public void isInRegionTest_EmptyCall() throws JsonProcessingException {
         NamedRegion region = new NamedRegion();
@@ -494,6 +532,7 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //if an empty string is provided it should return an error
     @Test
     public void isInRegionTest_EmptyString() throws JsonProcessingException {
 
@@ -501,6 +540,23 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //given an invalid order calcPath should return an error
+    @Test
+    public void calcPathTest_InvalidOrder() throws Exception {
+        String order = "{\"orderNo\":\"6E703605\",\"orderDate\":\"2025-01-07\",\"orderStatus\":\"UNDEFINED\"," +
+                "\"orderValidationCode\":\"UNDEFINED\",\"priceTotalInPence\":2600," +
+                "\"pizzasInOrder\":[{\"name\":\"R2: Meat Lover\",\"priceInPence\":1400}," +
+                "{\"name\":\"R2: Vegan Delight\",\"priceInPence\":1100}]," +
+                "\"creditCardInformation\":{\"creditCardNumber\":\"1111111\"," +
+                "\"creditCardExpiry\":\"05/25\",\"cvv\":\"382\"}}";
+
+        HttpStatusCode result = restController.calcDeliveryPath(order).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+
+
+    }
+
+    //ensure that no point on the path is in a noFly zone
     @Test
     public void calculatePath() throws JsonProcessingException {
         List <NamedRegion> noFlyZones = FetchFunctions.fetchNoFlyZones();
@@ -518,6 +574,7 @@ public class ControllerTests {
         assertTrue(valid);
     }
 
+    //ensure no provided neighbours are invalid positions or in a no-fly zone
     @Test
     public void generateNeighboursTest() throws JsonProcessingException {
         List <NamedRegion> noFlyZones = FetchFunctions.fetchNoFlyZones();
@@ -537,6 +594,7 @@ public class ControllerTests {
         assertTrue(result);
     }
 
+    //if a position already exists with a lower F it should not be added
     @Test
     public void isNodeSkippedTest_IsSkipped() throws JsonProcessingException {
         Node neighbour = new Node();
@@ -556,6 +614,7 @@ public class ControllerTests {
         assertTrue(restController.isNodeSkipped(neighbour, nodeList));
     }
 
+    //if the point exists with a higher F it should be added
     @Test
     public void isNodeSkippedTest_HigherF() throws JsonProcessingException {
         Node neighbour = new Node();
@@ -575,6 +634,7 @@ public class ControllerTests {
         assertFalse(restController.isNodeSkipped(neighbour, nodeList));
     }
 
+    //If the position does not exist it should not be skipped
     @Test
     public void isNodeSkippedTest_DifferentPos() throws JsonProcessingException {
         Node neighbour = new Node();
@@ -597,6 +657,7 @@ public class ControllerTests {
         assertFalse(restController.isNodeSkipped(neighbour, nodeList));
     }
 
+    //generate a random valid LngLat
     private LngLat generateRandomLngLat(){
         Double lng = random.nextDouble(180-(-180))-180;
         Double lat = random.nextDouble(90-(-90))-90;
@@ -605,6 +666,8 @@ public class ControllerTests {
         test.setLat(lat);
         return test;
     }
+
+    //generate a LngLat out of bounds
     private LngLat generateInvalidLngLat(){
         Double lng = random.nextDouble() * (450 - 200) + 200;
         Double lat = random.nextDouble() * (-90 - (-180)) - 90;
@@ -615,6 +678,7 @@ public class ControllerTests {
 
     }
 
+    //generate a LngLat close to Appleton
     private LngLat generateEdiLngLat(){
         double centerLng = -3.186874;
         double centerLat = 55.944494;
@@ -626,6 +690,8 @@ public class ControllerTests {
         test.setLat(lat);
         return test;
     }
+
+    //generate a valid LngLat pair
     private LngLatPair generateRandomLngLatPair() {
         LngLat pos1;
         pos1 = generateRandomLngLat();
@@ -637,10 +703,12 @@ public class ControllerTests {
         return test;
     }
 
+    //generate a valid angle
     private double generateRandomAngle(){
         return random.nextDouble()*360;
     }
 
+    //generate an angle out of range
     private double generateInvalidAngle() {
 
         double angle = random.nextDouble() * 720 - 360;
@@ -652,6 +720,7 @@ public class ControllerTests {
         }
     }
 
+    //generate a valid region
     private NamedRegion generateRandomValidRegion() {
         NamedRegion region = new NamedRegion();
         List<LngLat> vertices = new ArrayList<>();
@@ -668,6 +737,7 @@ public class ControllerTests {
         return region;
     }
 
+    //generate a region where the first and last points do not match
     private NamedRegion generateRandomOpenRegion() {
         NamedRegion region = new NamedRegion();
         List<LngLat> vertices = new ArrayList<>();
@@ -681,6 +751,7 @@ public class ControllerTests {
         region.setVertices(vertices);
         return region;
     }
+    //generate a region that has too few points
     private NamedRegion generateRandomSmallRegion() {
         NamedRegion region = new NamedRegion();
         List<LngLat> vertices = new ArrayList<>();
@@ -695,6 +766,7 @@ public class ControllerTests {
         region.setVertices(vertices);
         return region;
     }
+    //generate a region with invalid points
     private NamedRegion generateRandomInvalidRegion() {
         NamedRegion region = new NamedRegion();
         List<LngLat> vertices = new ArrayList<>();

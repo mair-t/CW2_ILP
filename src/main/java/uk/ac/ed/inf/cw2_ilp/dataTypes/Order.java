@@ -1,5 +1,7 @@
 package uk.ac.ed.inf.cw2_ilp.dataTypes;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class Order {
 
     public String orderNo;

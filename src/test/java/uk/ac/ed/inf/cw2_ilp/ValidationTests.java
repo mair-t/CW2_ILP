@@ -20,6 +20,7 @@ public class ValidationTests {
     Random random = new Random();
 
 
+    //ensures a valid string returns false as it is invalid
     @Test
     public void isntValidStringTest_String(){
         String input = "Valid String";
@@ -27,6 +28,7 @@ public class ValidationTests {
         assertFalse(result);
 
     }
+    //ensures a null string returns true
     @Test
     public void isntValidStringTest_NullString(){
         String input = null;
@@ -34,6 +36,7 @@ public class ValidationTests {
         assertTrue(result);
     }
 
+    //ensures an empty string returns true
     @Test
     public void isntValidStringTest_EmptyString(){
         String input = "";
@@ -41,6 +44,7 @@ public class ValidationTests {
         assertTrue(result);
     }
 
+    //ensures a whitespace string returns false
     @Test
     public void isntValidStringTest_WhitespaceString(){
         String input = " ";
@@ -48,12 +52,14 @@ public class ValidationTests {
         assertFalse(result);
     }
 
+    //ensures a valid position returns true
     @Test
     public void isValidPositionTest_ValidPosition(){
         LngLat test = generateRandomLngLat();
         boolean result = Validation.isValidPosition(test);
         assertTrue(result);
     }
+    //ensures if the latitude is invalid it returns false
     @Test
     public void isValidPositionTest_InvalidLat(){
         LngLat test = generateRandomLngLat();
@@ -62,6 +68,7 @@ public class ValidationTests {
         assertFalse(result);
 
     }
+    //ensures if the longitude is invalid it returns false
     @Test
     public void isValidPositionTest_InvalidLng(){
         LngLat test = generateRandomLngLat();
@@ -70,6 +77,7 @@ public class ValidationTests {
         assertFalse(result);
 
     }
+    //ensures if lat is missing it is false
     @Test
     public void isValidPositionTest_MissingLat(){
         Double lng = random.nextDouble(180-(-180))-180;
@@ -79,6 +87,7 @@ public class ValidationTests {
         assertFalse(result);
 
     }
+    //ensures if lng is missing it is false
     @Test
     public void isValidPositionTest_MissingLng(){
         Double lat = random.nextDouble(90-(-90))-90;
@@ -89,6 +98,7 @@ public class ValidationTests {
 
     }
 
+    //if the position is null it should return false
     @Test
     public void isValidPositionTest_NullPosition(){
         LngLat test = null;
@@ -96,6 +106,7 @@ public class ValidationTests {
         assertFalse(result);
     }
 
+    //if the position is not defined it returns false
     @Test
     public void isValidPositionTest_EmptyPosition(){
         LngLat test = new LngLat();
@@ -103,18 +114,22 @@ public class ValidationTests {
         assertFalse(result);
     }
 
+    //a valid angle should return true
     @Test
     public void isValidAngleTest_ValidAngle(){
         double angle = generateRandomAngle();
         boolean result = Validation.isValidAngle(angle);
         assertTrue(result);
     }
+
+    //if the angle is null it should return false
     @Test
     public void isValidAngleTest_NullAngle(){
         Double angle = null;
         boolean result = Validation.isValidAngle(angle);
         assertFalse(result);
     }
+    //if the angle is invalid (too high or low) it should return false
     @Test
     public void isValidAngleTest_InvalidAngle(){
         Double angle = 570.0;
@@ -124,6 +139,7 @@ public class ValidationTests {
         boolean result2 = Validation.isValidAngle(angle2);
         assertFalse(result2);
     }
+    //A valid region should return true
     @Test
     public void isValidRegionTest_ValidRegion(){
         NamedRegion region = generateRandomValidRegion();
@@ -131,6 +147,7 @@ public class ValidationTests {
         assertTrue(result);
 
     }
+    //if the region does not have the same first and last it returns false
     @Test
     public void isValidRegionTest_OpenRegion(){
         NamedRegion region = generateRandomOpenRegion();
@@ -138,12 +155,14 @@ public class ValidationTests {
         assertFalse(result);
 
     }
+    //if the region has too few points it returns false
     @Test
     public void isValidRegionTest_SmallRegion(){
         NamedRegion region = generateRandomSmallRegion();
         boolean result = Validation.isValidRegion(region);
         assertFalse(result);
     }
+    //an empty region should return false
     @Test
     public void isValidRegionTest_EmptyRegion(){
         NamedRegion region = null;
@@ -151,6 +170,7 @@ public class ValidationTests {
         assertFalse(result);
     }
 
+    //a credit card with valid attributes should return no error
     @Test
     public void creditCardCheckTest_ValidCreditCard(){
         Order order = new Order();
@@ -165,6 +185,7 @@ public class ValidationTests {
 
     }
 
+    //if the CVV is more or less than 3 digits it should be cvv invalid
     @Test
     public void creditCardCheckTest_CVVNot3digits(){
         Order order = new Order();
@@ -177,7 +198,12 @@ public class ValidationTests {
         OrderValidationCode result = Validation.creditCardCheck(test, order);
         assertEquals(OrderValidationCode.CVV_INVALID, result);
 
+        test.setCvv("12");
+        OrderValidationCode result2 = Validation.creditCardCheck(test, order);
+        assertEquals(OrderValidationCode.CVV_INVALID, result2);
+
     }
+   // if the cvv is not a string it should return CVV Invalid
     @Test
     public void creditCardCheckTest_CVVNotString(){
         Order order = new Order();
@@ -192,6 +218,7 @@ public class ValidationTests {
 
     }
 
+    //if the cvv is not numbers it should return CVV Invalid
     @Test
     public void creditCardCheckTest_CVVNotDigits(){
         Order order = new Order();
@@ -206,6 +233,7 @@ public class ValidationTests {
 
     }
 
+    //if the Card number is more or less than 16 digits it should be card number invalid
     @Test
     public void creditCardCheckTest_CardNumberLengthWrong(){
         Order order = new Order();
@@ -218,7 +246,13 @@ public class ValidationTests {
         OrderValidationCode result = Validation.creditCardCheck(test, order);
         assertEquals(OrderValidationCode.CARD_NUMBER_INVALID, result);
 
+        test.setCreditCardNumber("123456789012345");
+        OrderValidationCode result2 = Validation.creditCardCheck(test, order);
+        assertEquals(OrderValidationCode.CARD_NUMBER_INVALID, result2);
+
+
     }
+    //if the card number is not a string it should return Card number Invalid
     @Test
     public void creditCardCheckTest_CardNumberNotString(){
         Order order = new Order();
@@ -233,6 +267,7 @@ public class ValidationTests {
 
     }
 
+    //if the card number is not digits it should return Card number Invalid
     @Test
     public void creditCardCheckTest_CardNumbernotNumber(){
         Order order = new Order();
@@ -247,6 +282,7 @@ public class ValidationTests {
 
     }
 
+    //if the expiry date is not a valid date it should return expiry date invalid
     @Test
     public void creditCardCheckTest_ExpiryDateNotDate(){
         Order order = new Order();
@@ -261,6 +297,7 @@ public class ValidationTests {
 
     }
 
+    //if the expiry date is before the order date it should return expiry date invalid
     @Test
     public void creditCardCheckTest_ExpiryDateBeforeDate(){
         Order order = new Order();
@@ -275,6 +312,7 @@ public class ValidationTests {
 
     }
 
+    //if the order is valid it should return no_error
     @Test
     public void pizzaCheckTest_ValidOrder(){
         Pizza pizza1 = new Pizza();
@@ -296,6 +334,7 @@ public class ValidationTests {
         assertEquals(OrderValidationCode.NO_ERROR, result);
 
     }
+    //if there are more than 4 pizzas it should return max pizza count exceeded
     @Test
     public void pizzaCheckTest_TooManyPizzas(){
         Pizza pizza1 = new Pizza();
@@ -326,6 +365,7 @@ public class ValidationTests {
         assertEquals(OrderValidationCode.MAX_PIZZA_COUNT_EXCEEDED, result);
 
     }
+    //if there are no pizzas it should return empty order
     @Test
     public void pizzaCheckTest_EmptyOrder(){
 
@@ -341,6 +381,7 @@ public class ValidationTests {
         assertEquals(OrderValidationCode.EMPTY_ORDER, result);
 
     }
+    //if the total of the order does not match the sum of the costs it should return total incorrect
     @Test
     public void pizzaCheckTest_TotalIncorrect(){
         Pizza pizza1 = new Pizza();
@@ -363,6 +404,7 @@ public class ValidationTests {
 
     }
 
+    //if a pizza does not exist it should return pizza not defined
     @Test
     public void pizzaCheckTest_InvalidPizza(){
         Pizza pizza1 = new Pizza();
@@ -384,6 +426,7 @@ public class ValidationTests {
         assertEquals(OrderValidationCode.PIZZA_NOT_DEFINED, result);
 
     }
+    //if the restaurant is not open on the order day it should return restaurant closed
     @Test
     public void pizzaCheckTest_RestaurantClosed(){
         Pizza pizza1 = new Pizza();
@@ -406,6 +449,7 @@ public class ValidationTests {
 
     }
 
+    //if the pizzas are from multiple restaurants it should return pizza from multiple restaurants
     @Test
     public void pizzaCheckTest_MultipleRestaurants(){
         Pizza pizza1 = new Pizza();
@@ -428,6 +472,7 @@ public class ValidationTests {
 
     }
 
+    //if the price does not match it should return price invalid
     @Test
     public void pizzaCheckTest_PriceInvalid(){
         Pizza pizza1 = new Pizza();
@@ -442,14 +487,15 @@ public class ValidationTests {
         Order order = new Order();
         order.setPriceTotalInPence(2400);
         order.setPizzasInOrder(pizzas);
-        order.setOrderDate("2025-01-09");
+        order.setOrderDate("2025-01-10");
 
         OrderValidationCode result = Validation.pizzaCheck(pizzas, order);
 
-        assertEquals(OrderValidationCode.RESTAURANT_CLOSED, result);
+        assertEquals(OrderValidationCode.PRICE_FOR_PIZZA_INVALID, result);
 
     }
 
+    //if the day of the orderDate is listed in the restaurants opening days true should be returned
     @Test
     public void isRestaurantOpenTest_OpenRestaurant(){
         Restaurant restaurant = new Restaurant();
@@ -462,6 +508,7 @@ public class ValidationTests {
         assertTrue(result);
     }
 
+    //if the day of the orderDate is not listed in the restaurants opening days false should be returned
     @Test
     public void isRestaurantOpenTest_ClosedRestaurant(){
         Restaurant restaurant = new Restaurant();
@@ -478,7 +525,7 @@ public class ValidationTests {
 
 
 
-
+    //generate a valid LngLat value
     private LngLat generateRandomLngLat(){
         Double lng = random.nextDouble(180-(-180))-180;
         Double lat = random.nextDouble(90-(-90))-90;
@@ -488,9 +535,12 @@ public class ValidationTests {
         return test;
     }
 
+    //generate a valid random angle
     private double generateRandomAngle(){
         return random.nextDouble()*360;
     }
+
+    //generate a valid region of random LngLats
     private NamedRegion generateRandomValidRegion() {
         NamedRegion region = new NamedRegion();
         List<LngLat> vertices = new ArrayList<>();
@@ -506,6 +556,7 @@ public class ValidationTests {
         region.setVertices(vertices);
         return region;
     }
+    //generate a region where the first and last vertices dont match
     private NamedRegion generateRandomOpenRegion() {
         NamedRegion region = new NamedRegion();
         List<LngLat> vertices = new ArrayList<>();
@@ -519,6 +570,8 @@ public class ValidationTests {
         region.setVertices(vertices);
         return region;
     }
+
+    //generate a region with too few points
     private NamedRegion generateRandomSmallRegion() {
         NamedRegion region = new NamedRegion();
         List<LngLat> vertices = new ArrayList<>();

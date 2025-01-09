@@ -338,13 +338,14 @@ public class RestController {
                         continue;
 
                     }
-                    //if the gap was too large add a gapCloser node to speed things up
+                    //if not far away simply add the neighbour
                     if (!closeGap) {
                         openSet.add(neighbour);
 
                     }
                 }
             }
+            //if the node is far from the target add the neighbour with the smallest H to open set automatically
             if (closeGap ) {
                 gapCloser = Collections.min(neighbours, Comparator.comparingDouble(Node::getH));
                 openSet.add(gapCloser);
