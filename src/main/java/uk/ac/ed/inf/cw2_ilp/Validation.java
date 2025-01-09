@@ -43,6 +43,10 @@ public class Validation {
 
     //checks to make sue the region provided is valid, returns true if so
     public static boolean isValidRegion(NamedRegion region) {
+        //if its null it cannot be a valid region
+        if (region == null) {
+            return false;
+        }
 
         //checks that the region has at least 4 vertices (3 with the first and last being the same)
         int numVertices = region.getVertices().size();
@@ -153,7 +157,7 @@ public class Validation {
             //if the price on the order doesnt match the menu then return PRICE_FOR_PIZZA_INVALID
             int index = menuPizzas.indexOf(pizza.getName());
 
-            if(pizza.getPriceInPence() != menu[index].getPriceInPence()){
+            if(index == -1||pizza.getPriceInPence() != menu[index].getPriceInPence()){
                 return OrderValidationCode.PRICE_FOR_PIZZA_INVALID;
             }
 
@@ -171,7 +175,7 @@ public class Validation {
     }
 
     //given a date calculate if the restaurant given is open
-    private static boolean isRestaurantOpen(Restaurant restaurant, String orderDate) {
+    public static boolean isRestaurantOpen(Restaurant restaurant, String orderDate) {
         //calculate what day it is using the date
         LocalDate date = LocalDate.parse(orderDate);
         DayOfWeek day = date.getDayOfWeek();

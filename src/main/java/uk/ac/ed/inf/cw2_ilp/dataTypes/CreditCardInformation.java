@@ -17,4 +17,14 @@ public class CreditCardInformation {
     public String getCreditCardExpiry() {
         return creditCardExpiry;
     }
+
+    public void setCreditCardNumber(String creditCardNumber) {
+        this.creditCardNumber = creditCardNumber;
+    }
+    public void setCreditCardExpiry(String creditCardExpiry) {
+        this.creditCardExpiry = creditCardExpiry;
+    }
+    public void setCvv(String cvv) {
+        this.cvv = cvv;
+    }
 }

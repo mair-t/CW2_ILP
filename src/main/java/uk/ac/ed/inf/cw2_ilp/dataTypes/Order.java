@@ -42,4 +42,13 @@ public class Order {
     public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }
+    public void setOrderDate(String orderDate) {
+        this.orderDate = orderDate;
+    }
+    public void setPriceTotalInPence(int priceTotalInPence) {
+        this.priceTotalInPence = priceTotalInPence;
+    }
+    public void setPizzasInOrder(Pizza[] pizzasInOrder) {
+        this.pizzasInOrder = pizzasInOrder;
+    }
 }
