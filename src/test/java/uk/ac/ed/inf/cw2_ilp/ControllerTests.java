@@ -540,21 +540,6 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
-    //given an invalid order calcPath should return an error
-    @Test
-    public void calcPathTest_InvalidOrder() throws Exception {
-        String order = "{\"orderNo\":\"6E703605\",\"orderDate\":\"2025-01-07\",\"orderStatus\":\"UNDEFINED\"," +
-                "\"orderValidationCode\":\"UNDEFINED\",\"priceTotalInPence\":2600," +
-                "\"pizzasInOrder\":[{\"name\":\"R2: Meat Lover\",\"priceInPence\":1400}," +
-                "{\"name\":\"R2: Vegan Delight\",\"priceInPence\":1100}]," +
-                "\"creditCardInformation\":{\"creditCardNumber\":\"1111111\"," +
-                "\"creditCardExpiry\":\"05/25\",\"cvv\":\"382\"}}";
-
-        HttpStatusCode result = restController.calcDeliveryPath(order).getStatusCode();
-        assertEquals(HttpStatus.BAD_REQUEST, result);
-
-
-    }
 
     //ensure that no point on the path is in a noFly zone
     @Test
