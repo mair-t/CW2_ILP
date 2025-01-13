@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -16,7 +14,6 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
-import org.mockito.MockedStatic;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,7 +37,6 @@ public class MockedTests {
 
     @InjectMocks
     private RestController validationController;
-
 
 
     @Mock
@@ -75,6 +71,7 @@ public class MockedTests {
         assertEquals(OrderValidationCode.CVV_INVALID, response.getBody().getOrderValidationCode());
         assertEquals(OrderStatus.INVALID, response.getBody().getOrderStatus());
     }
+
     @Test
     void testInvalidCardNumber() throws JsonProcessingException {
         String validOrderRequest = "{\"creditCardInformation\": {\"creditCardNumber\": \"1234567812345678\", \"cvv\": \"12\", \"creditCardExpiry\": \"12/23\"}, \"pizzasInOrder\": [], \"priceTotalInPence\": 0}";
@@ -200,7 +197,6 @@ public class MockedTests {
                     .thenReturn(mockRestaurant);
 
 
-
             ResponseEntity<OrderValidationResult> response = validationController.validateOrder(validOrderRequest);
 
 
@@ -275,7 +271,7 @@ public class MockedTests {
         mockPizza2.setPriceInPence(1500);
 
 
-        Pizza[] pizzas = {mockPizza,mockPizza2};
+        Pizza[] pizzas = {mockPizza, mockPizza2};
 
 
         when(objectMapper.readValue(validOrderRequest, Order.class)).thenReturn(mockOrder);
@@ -294,17 +290,16 @@ public class MockedTests {
         Pizza[] menu2 = {mockPizza2};
         mockRestaurant2.setMenu(menu2);
         mockRestaurant2.setName("MockRestaurant2");
-        mockRestaurant2.setOpeningDays(List.of(DayOfWeek.MONDAY,DayOfWeek.WEDNESDAY,DayOfWeek.FRIDAY));
+        mockRestaurant2.setOpeningDays(List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY));
 
         try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
 
-            mockedStatic.when(FetchFunctions::fetchRestaurants).thenReturn(List.of(mockRestaurant,mockRestaurant2));
+            mockedStatic.when(FetchFunctions::fetchRestaurants).thenReturn(List.of(mockRestaurant, mockRestaurant2));
 
-            mockedStatic.when(() -> FetchFunctions.getRestaurantForPizza("ValidPizza", List.of(mockRestaurant,mockRestaurant2)))
+            mockedStatic.when(() -> FetchFunctions.getRestaurantForPizza("ValidPizza", List.of(mockRestaurant, mockRestaurant2)))
                     .thenReturn(mockRestaurant);
-            mockedStatic.when(() -> FetchFunctions.getRestaurantForPizza("ValidPizza2", List.of(mockRestaurant,mockRestaurant2)))
+            mockedStatic.when(() -> FetchFunctions.getRestaurantForPizza("ValidPizza2", List.of(mockRestaurant, mockRestaurant2)))
                     .thenReturn(mockRestaurant2);
-
 
 
             ResponseEntity<OrderValidationResult> response = validationController.validateOrder(validOrderRequest);
@@ -342,7 +337,7 @@ public class MockedTests {
         Pizza restPizza = new Pizza();
         restPizza.setName("ValidPizza");
         restPizza.setPriceInPence(1600);
-        Pizza[] menu= {restPizza};
+        Pizza[] menu = {restPizza};
 
         Restaurant mockRestaurant = new Restaurant();
         mockRestaurant.setMenu(menu);
@@ -355,7 +350,6 @@ public class MockedTests {
 
             mockedStatic.when(() -> FetchFunctions.getRestaurantForPizza("ValidPizza", List.of(mockRestaurant)))
                     .thenReturn(mockRestaurant);
-
 
 
             ResponseEntity<OrderValidationResult> response = validationController.validateOrder(validOrderRequest);
@@ -429,7 +423,7 @@ public class MockedTests {
 
     @Test
     void testCalcDeliveryPath_ValidOrder() throws JsonProcessingException {
+
+
     }
-
-
 }

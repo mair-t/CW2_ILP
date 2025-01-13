@@ -280,7 +280,11 @@ public class RestController {
         //properties is empty for this style
         geoJson.put("properties", new LinkedHashMap<>());
 
-        return ResponseEntity.ok(mapper.writeValueAsString(geoJson));
+        Map<String, Object> featureCollection = new LinkedHashMap<>();
+        featureCollection.put("type", "FeatureCollection");
+        featureCollection.put("features", Collections.singletonList(geoJson));
+
+        return ResponseEntity.ok(mapper.writeValueAsString(featureCollection));
     }
 
     //calculates a path using an A* algorithm
