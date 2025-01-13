@@ -10,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
 
@@ -540,6 +541,56 @@ public class ControllerTests {
         assertEquals(HttpStatus.BAD_REQUEST, result);
     }
 
+    //given an invalid order calcPath should return an error
+    @Test
+    public void calcPathTest_InvalidOrder() throws Exception {
+        String order = "{\"orderNo\":\"6E703605\",\"orderDate\":\"2025-01-07\",\"orderStatus\":\"UNDEFINED\"," +
+                "\"orderValidationCode\":\"UNDEFINED\",\"priceTotalInPence\":2600," +
+                "\"pizzasInOrder\":[{\"name\":\"R2: Meat Lover\",\"priceInPence\":1400}," +
+                "{\"name\":\"R2: Vegan Delight\",\"priceInPence\":1100}]," +
+                "\"creditCardInformation\":{\"creditCardNumber\":\"1111111\"," +
+                "\"creditCardExpiry\":\"05/25\",\"cvv\":\"382\"}}";
+
+        HttpStatusCode result = restController.calcDeliveryPath(order).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+
+
+    }
+
+    @Test
+    public void calcPathTest_EmptyOrder() throws Exception {
+        String order = "";
+
+        HttpStatusCode result = restController.calcDeliveryPath(order).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+
+
+    }
+
+    @Test
+    public void calcPathTest_ValidOrder() throws Exception {
+        List <NamedRegion> noFlyZones = FetchFunctions.fetchNoFlyZones();
+        boolean valid = true;
+        String order = "{\"orderNo\":\"6E703605\",\"orderDate\":\"2024-12-20\",\"orderStatus\":\"UNDEFINED\"," +
+                "\"orderValidationCode\":\"UNDEFINED\",\"priceTotalInPence\":2400," +
+                "\"pizzasInOrder\":[{\"name\":\"R3: All Shrooms\",\"priceInPence\":900}," +
+                "{\"name\":\"R3: Super Cheese\",\"priceInPence\":1400}]," +
+                "\"creditCardInformation\":{\"creditCardNumber\":\"1234567812345678\"," +
+                "\"creditCardExpiry\":\"05/25\",\"cvv\":\"382\"}}";
+
+        ResponseEntity<LngLat[]> result = restController.calcDeliveryPath(order);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+
+        for(LngLat point: result.getBody()) {
+            if(restController.isInNoFlyZone(noFlyZones, point)){
+                valid = false;
+            }
+        }
+        assertTrue(valid);
+
+
+    }
+
 
     //ensure that no point on the path is in a noFly zone
     @Test
@@ -557,6 +608,49 @@ public class ControllerTests {
             }
         }
         assertTrue(valid);
+    }
+
+    @Test
+    public void calcPathAsGeoJsonTest_InvalidOrder() throws Exception {
+        String order = "{\"orderNo\":\"6E703605\",\"orderDate\":\"2025-01-07\",\"orderStatus\":\"UNDEFINED\"," +
+                "\"orderValidationCode\":\"UNDEFINED\",\"priceTotalInPence\":2600," +
+                "\"pizzasInOrder\":[{\"name\":\"R2: Meat Lover\",\"priceInPence\":1400}," +
+                "{\"name\":\"R2: Vegan Delight\",\"priceInPence\":1100}]," +
+                "\"creditCardInformation\":{\"creditCardNumber\":\"1111111\"," +
+                "\"creditCardExpiry\":\"05/25\",\"cvv\":\"382\"}}";
+
+        HttpStatusCode result = restController.calcDeliveryPathAsGeoJson(order).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+
+
+    }
+
+    @Test
+    public void calcPathAsGeoJsonTest_EmptyOrder() throws Exception {
+        String order = "";
+
+        HttpStatusCode result = restController.calcDeliveryPathAsGeoJson(order).getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST, result);
+
+
+    }
+
+    @Test
+    public void calcPathAsGeoJsonTest_ValidOrder() throws Exception {
+        String order = "{\"orderNo\":\"6E703605\",\"orderDate\":\"2024-12-20\",\"orderStatus\":\"UNDEFINED\"," +
+                "\"orderValidationCode\":\"UNDEFINED\",\"priceTotalInPence\":2400," +
+                "\"pizzasInOrder\":[{\"name\":\"R3: All Shrooms\",\"priceInPence\":900}," +
+                "{\"name\":\"R3: Super Cheese\",\"priceInPence\":1400}]," +
+                "\"creditCardInformation\":{\"creditCardNumber\":\"1234567812345678\"," +
+                "\"creditCardExpiry\":\"05/25\",\"cvv\":\"382\"}}";
+
+        ResponseEntity<String> result = restController.calcDeliveryPathAsGeoJson(order);
+        assertEquals(HttpStatus.OK, result.getStatusCode());
+
+        String expectedGeoJsonPrefix = "{\"type\":\"FeatureCollection\"";
+        String resultBody = result.getBody();
+        assertTrue(resultBody.startsWith(expectedGeoJsonPrefix));
+
     }
 
     //ensure no provided neighbours are invalid positions or in a no-fly zone

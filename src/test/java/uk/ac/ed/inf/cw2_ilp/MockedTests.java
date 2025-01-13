@@ -421,9 +421,6 @@ public class MockedTests {
 
     }
 
-    @Test
-    void testCalcDeliveryPath_ValidOrder() throws JsonProcessingException {
 
 
-    }
 }

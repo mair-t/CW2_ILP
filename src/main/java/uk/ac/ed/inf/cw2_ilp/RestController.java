@@ -215,6 +215,9 @@ public class RestController {
     @PostMapping("calcDeliveryPath")
     public ResponseEntity<LngLat[]> calcDeliveryPath(@RequestBody String orderRequest) throws JsonProcessingException {
         Order currentOrder;
+        if (Validation.isntValidString(orderRequest)){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
         // validate order, if invalid then return an error
         OrderValidationResult validation = validateOrder(orderRequest).getBody();
         if(!(validation.getOrderStatus() == OrderStatus.VALID)){
