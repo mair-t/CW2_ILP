@@ -2,16 +2,13 @@ package uk.ac.ed.inf.cw2_ilp;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.web.servlet.MockMvc;
+
 import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
 
 import java.util.ArrayList;
@@ -20,9 +17,8 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
 
 
 public class ControllerTests {
@@ -580,6 +576,7 @@ public class ControllerTests {
 
         ResponseEntity<LngLat[]> result = restController.calcDeliveryPath(order);
         assertEquals(HttpStatus.OK, result.getStatusCode());
+        assertNotNull(result);
 
         for(LngLat point: result.getBody()) {
             if(restController.isInNoFlyZone(noFlyZones, point)){
@@ -609,7 +606,28 @@ public class ControllerTests {
         }
         assertTrue(valid);
     }
+    @Test
+    public void testCalculatePathPerformance() throws Exception {
 
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+
+
+        long startTime = System.nanoTime();
+
+        List<LngLat> path = restController.calculatePath(startPos, endPos);
+
+        long endTime = System.nanoTime();
+
+        long duration = endTime - startTime;
+
+        assertNotNull(path);
+        assertFalse(path.isEmpty());
+
+
+        long acceptableTimeThresholdInMilliseconds = 60000;
+        assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000);
+    }
     @Test
     public void calcPathAsGeoJsonTest_InvalidOrder() throws Exception {
         String order = "{\"orderNo\":\"6E703605\",\"orderDate\":\"2025-01-07\",\"orderStatus\":\"UNDEFINED\"," +
@@ -649,6 +667,7 @@ public class ControllerTests {
 
         String expectedGeoJsonPrefix = "{\"type\":\"FeatureCollection\"";
         String resultBody = result.getBody();
+        assertNotNull(resultBody);
         assertTrue(resultBody.startsWith(expectedGeoJsonPrefix));
 
     }

@@ -220,6 +220,7 @@ public class RestController {
         }
         // validate order, if invalid then return an error
         OrderValidationResult validation = validateOrder(orderRequest).getBody();
+        assert validation != null;
         if(!(validation.getOrderStatus() == OrderStatus.VALID)){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
@@ -231,6 +232,7 @@ public class RestController {
         List<Restaurant> restaurants = FetchFunctions.fetchRestaurants();
         Restaurant restaurant = FetchFunctions.getRestaurantForPizza(pizzaName, restaurants);
         //find location of restaurant
+        assert restaurant != null;
         LngLat restaurantLocation = restaurant.getLocation();
         //find the location of appleton in LngLat format
         LngLat appletonLocation;
@@ -300,7 +302,7 @@ public class RestController {
 
         double h;
         double g;
-        boolean closeGap;
+        boolean tooFar;
 
         //initialise start node
         Node start = new Node();
@@ -320,10 +322,10 @@ public class RestController {
             //return a list of neighbours of the current node
             List<Node> neighbours = getNeighbours(current, noFlyZones);
 
-            //if the gap is too large and will take too long set closeGap to true
-            closeGap = current.getH() > (30 * Constants.MOVEMENT);
+            //if the gap is too large and will take too long set tooFar to true
+            tooFar = current.getH() > (30 * Constants.MOVEMENT);
 
-            Node gapCloser;
+            Node closerNode;
 
             for (Node neighbour : neighbours) {
                 //if the neighbour is close to the goal reconstruct the path and return it
@@ -346,16 +348,16 @@ public class RestController {
 
                     }
                     //if not far away simply add the neighbour
-                    if (!closeGap) {
+                    if (!tooFar) {
                         openSet.add(neighbour);
 
                     }
                 }
             }
             //if the node is far from the target add the neighbour with the smallest H to open set automatically
-            if (closeGap ) {
-                gapCloser = Collections.min(neighbours, Comparator.comparingDouble(Node::getH));
-                openSet.add(gapCloser);
+            if (tooFar ) {
+                closerNode = Collections.min(neighbours, Comparator.comparingDouble(Node::getH));
+                openSet.add(closerNode);
             }
             //the current node was dealt with and can be added to closedSet
             closedSet.add(current);

@@ -64,9 +64,7 @@ public class GeometryTests {
     public void getDistanceBetweenTest_Random()  {
         LngLat pos1 = generateRandomLngLat();
         LngLat pos2 = generateRandomLngLat();
-        LngLatPair test = new LngLatPair();
-        test.setPos1(pos1);
-        test.setPos2(pos2);
+
 
         double lng1 = pos1.getLng();
         double lat1 = pos1.getLat();

@@ -148,6 +148,7 @@ public class Validation {
             Restaurant restaurant = FetchFunctions.getRestaurantForPizza(name,restaurants);
 
             //get the menu for this restaurant
+            assert restaurant != null;
             Pizza[] menu = restaurant.getMenu();
             List <String> menuPizzas = Arrays.stream(menu).map(Pizza::getName).toList();
             //if this restaurant isnt open return RESTAURANT_CLOSED
