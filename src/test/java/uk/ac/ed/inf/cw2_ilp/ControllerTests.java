@@ -606,6 +606,7 @@ public class ControllerTests {
         }
         assertTrue(valid);
     }
+
     @Test
     public void testCalculatePathPerformance() throws Exception {
 
@@ -628,6 +629,8 @@ public class ControllerTests {
         long acceptableTimeThresholdInMilliseconds = 60000;
         assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000);
     }
+
+
     @Test
     public void calcPathAsGeoJsonTest_InvalidOrder() throws Exception {
         String order = "{\"orderNo\":\"6E703605\",\"orderDate\":\"2025-01-07\",\"orderStatus\":\"UNDEFINED\"," +
@@ -880,6 +883,24 @@ public class ControllerTests {
         region.setVertices(vertices);
         return region;
     }
+
+    private NamedRegion generateEdiRegion(){
+        NamedRegion region = new NamedRegion();
+        List<LngLat> vertices = new ArrayList<>();
+
+        int numVertices = random.nextInt(4) + 3;
+        for (int i = 0; i < numVertices - 1; i++) {
+            LngLat vertex = generateEdiLngLat();
+            vertices.add(vertex);
+        }
+
+        vertices.add(vertices.get(0));
+
+        region.setVertices(vertices);
+        return region;
+    }
+
+
 
 
 

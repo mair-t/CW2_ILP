@@ -304,6 +304,10 @@ public class RestController {
         double g;
         boolean tooFar;
 
+        if(isInNoFlyZone(noFlyZones,startPos)){
+            return null;
+        }
+
         //initialise start node
         Node start = new Node();
         start.setPosition(startPos);

@@ -20,7 +20,9 @@ import uk.ac.ed.inf.cw2_ilp.dataTypes.*;
 
 import java.time.DayOfWeek;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +37,7 @@ public class MockedTests {
 
     @Mock
     private ObjectMapper objectMapper;
+    Random random = new Random();
 
     @Test
     void testInvalidOrderString() throws JsonProcessingException {
@@ -412,6 +415,533 @@ public class MockedTests {
         ResponseEntity<LngLat[]> response = validationController.calcDeliveryPath(validOrderRequest);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+    }
+
+
+    @Test
+    public void testCalculatePathWithOneNoFlyZone() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+        boolean valid = true;
+
+
+        List<NamedRegion> customNoFlyZones = List.of(generateEdiRegion());
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+
+            List<LngLat> path = validationController.calculatePath(startPos, endPos);
+            LngLat lastPoint = path.get(path.size() - 1);
+            boolean close = GeometryFunctions.getDistanceBetween(endPos,lastPoint)<0.00015;
+
+            assertNotNull(path);
+            assertFalse(path.isEmpty());
+
+
+            for (LngLat point: path){
+                if(validationController.isInNoFlyZone(customNoFlyZones, point)){
+                    valid = false;
+                }
+            }
+            assertTrue(valid);
+            assertTrue(close);
+        }
+    }
+
+    @Test
+    public void testCalculatePathWithNoNoFlyZones() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+        boolean valid = true;
+
+
+        List<NamedRegion> customNoFlyZones = List.of();
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+
+            List<LngLat> path = validationController.calculatePath(startPos, endPos);
+            LngLat lastPoint = path.get(path.size() - 1);
+            boolean close = GeometryFunctions.getDistanceBetween(endPos,lastPoint)<0.00015;
+
+            assertNotNull(path);
+            assertFalse(path.isEmpty());
+
+
+            for (LngLat point: path){
+                if(validationController.isInNoFlyZone(customNoFlyZones, point)){
+                    valid = false;
+                }
+            }
+            assertTrue(valid);
+            assertTrue(close);
+        }
+    }
+
+    @Test
+    public void testCalculatePathWithTwoNoFlyZones() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+        boolean valid = true;
+
+        NamedRegion zone1 = generateEdiRegion();
+        NamedRegion zone2 = generateEdiRegion();
+        List<NamedRegion> customNoFlyZones = List.of(zone1, zone2);
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+
+            List<LngLat> path = validationController.calculatePath(startPos, endPos);
+            LngLat lastPoint = path.get(path.size() - 1);
+            boolean close = GeometryFunctions.getDistanceBetween(endPos,lastPoint)<0.00015;
+
+            assertNotNull(path);
+            assertFalse(path.isEmpty());
+
+
+            for (LngLat point: path){
+                if(validationController.isInNoFlyZone(customNoFlyZones, point)){
+                    valid = false;
+                }
+            }
+            assertTrue(valid);
+            assertTrue(close);
+        }
+    }
+    @Test
+    public void testCalculatePathWithManyNoFlyZones() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+        boolean valid = true;
+
+        List<NamedRegion> customNoFlyZones = generateNoFlyZones();
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+
+            List<LngLat> path = validationController.calculatePath(startPos, endPos);
+            LngLat lastPoint = path.get(path.size() - 1);
+            boolean close = GeometryFunctions.getDistanceBetween(endPos,lastPoint)<0.00015;
+
+            assertNotNull(path);
+            assertFalse(path.isEmpty());
+
+
+            for (LngLat point: path){
+                if(validationController.isInNoFlyZone(customNoFlyZones, point)){
+                    valid = false;
+                }
+            }
+            assertTrue(valid);
+            assertTrue(close);
+        }
+    }
+    @Test
+    public void testPathStartingInNoFlyZone() throws Exception {
+
+        LngLat startPos = new LngLat();
+        startPos.setLat(55.944494);
+        startPos.setLng(-3.186874);
+        LngLat endPos = new LngLat();
+        endPos.setLat(55.942617);
+        endPos.setLng(-3.190234);
+
+        LngLat one = new LngLat();
+        one.setLat(55.944);
+        one.setLng(-3.187);
+
+        LngLat two = new LngLat();
+        two.setLat(55.944);
+        two.setLng(-3.185);
+
+        LngLat three = new LngLat();
+        three.setLat(55.945);
+        three.setLng(-3.185);
+
+        LngLat four = new LngLat();
+        four.setLat(55.945);
+        four.setLng(-3.187);
+
+
+        NamedRegion noFlyZone = new NamedRegion();
+
+        noFlyZone.setVertices(List.of(one, two, three, four,one));
+
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(List.of(noFlyZone));
+
+
+               List<LngLat> path = validationController.calculatePath(startPos, endPos);
+
+                assertNull(path);
+
+
+
+        }
+    }
+
+    @Test
+    public void testCalculatePathPerformanceWithOneNoFlyZone() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+
+
+        List<NamedRegion> customNoFlyZones = List.of(generateEdiRegion());
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+            long startTime = System.nanoTime();
+
+            List<LngLat> path = validationController.calculatePath(startPos, endPos);
+
+
+            long endTime = System.nanoTime();
+
+            long duration = endTime - startTime;
+
+            assertNotNull(path);
+            assertFalse(path.isEmpty());
+
+
+            long acceptableTimeThresholdInMilliseconds = 60000;
+            assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000);
+        }
+    }
+
+    @Test
+    public void testCalculatePathPerformanceRepeatWithOneNoFlyZone() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+        List<NamedRegion> customNoFlyZones = List.of(generateEdiRegion());
+
+        int iterations = 100;
+        long totalDuration = 0;
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+            for (int i = 0; i < iterations; i++) {
+                long startTime = System.nanoTime();
+
+
+                List<LngLat> path = validationController.calculatePath(startPos, endPos);
+
+                long endTime = System.nanoTime();
+                long duration = endTime - startTime;
+
+                totalDuration += duration;
+
+
+                assertNotNull(path);
+                assertFalse(path.isEmpty());
+
+                long acceptableTimeThresholdInMilliseconds = 60000;
+                assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000,
+                        "Iteration " + (i + 1) + ": Duration exceeded acceptable threshold (" + duration / 1_000_000 + " ms)");
+            }
+        }
+
+
+        double averageDurationInMilliseconds = (double) totalDuration / iterations / 1_000_000;
+
+        System.out.println("Average duration: " + averageDurationInMilliseconds + " ms");
+
+        long acceptableAverageThresholdInMilliseconds = 60000;
+        assertTrue(averageDurationInMilliseconds < acceptableAverageThresholdInMilliseconds,
+                "Average duration exceeded acceptable threshold (" + averageDurationInMilliseconds + " ms)");
+    }
+    @Test
+    public void testCalculatePathPerformanceWithNoNoFlyZones() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+
+        List<NamedRegion> customNoFlyZones = List.of();
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+
+            long startTime = System.nanoTime();
+
+
+            List<LngLat> path = validationController.calculatePath(startPos, endPos);
+
+
+            long endTime = System.nanoTime();
+
+            long duration = endTime - startTime;
+
+
+            assertNotNull(path);
+            assertFalse(path.isEmpty());
+
+
+            long acceptableTimeThresholdInMilliseconds = 60000;
+            assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000);
+        }
+    }
+
+    @Test
+    public void testCalculatePathPerformanceRepeatWithNoNoFlyZone() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+        List<NamedRegion> customNoFlyZones = List.of();
+
+        int iterations = 100;
+        long totalDuration = 0;
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+            for (int i = 0; i < iterations; i++) {
+                long startTime = System.nanoTime();
+
+
+                List<LngLat> path = validationController.calculatePath(startPos, endPos);
+
+                long endTime = System.nanoTime();
+                long duration = endTime - startTime;
+
+                totalDuration += duration;
+
+
+                assertNotNull(path);
+                assertFalse(path.isEmpty());
+
+                long acceptableTimeThresholdInMilliseconds = 60000;
+                assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000,
+                        "Iteration " + (i + 1) + ": Duration exceeded acceptable threshold (" + duration / 1_000_000 + " ms)");
+            }
+        }
+
+        double averageDurationInMilliseconds = (double) totalDuration / iterations / 1_000_000;
+
+        System.out.println("Average duration: " + averageDurationInMilliseconds + " ms");
+
+
+        long acceptableAverageThresholdInMilliseconds = 60000;
+        assertTrue(averageDurationInMilliseconds < acceptableAverageThresholdInMilliseconds,
+                "Average duration exceeded acceptable threshold (" + averageDurationInMilliseconds + " ms)");
+    }
+    @Test
+    public void testCalculatePathPerformanceWithTwoNoFlyZones() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+
+
+        NamedRegion zone1 = generateEdiRegion();
+        NamedRegion zone2 = generateEdiRegion();
+        List<NamedRegion> customNoFlyZones = List.of(zone1, zone2);
+
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+
+            long startTime = System.nanoTime();
+
+
+            List<LngLat> path = validationController.calculatePath(startPos, endPos);
+
+
+            long endTime = System.nanoTime();
+
+            long duration = endTime - startTime;
+
+
+            assertNotNull(path);
+            assertFalse(path.isEmpty());
+
+
+
+            long acceptableTimeThresholdInMilliseconds = 60000;
+            assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000);
+        }
+    }
+
+    @Test
+    public void testCalculatePathPerformanceRepeatWithTwoNoFlyZone() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+
+
+        NamedRegion zone1 = generateEdiRegion();
+        NamedRegion zone2 = generateEdiRegion();
+        List<NamedRegion> customNoFlyZones = List.of(zone1, zone2);
+
+        int iterations = 100;
+        long totalDuration = 0;
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+            for (int i = 0; i < iterations; i++) {
+                long startTime = System.nanoTime();
+
+
+                List<LngLat> path = validationController.calculatePath(startPos, endPos);
+
+                long endTime = System.nanoTime();
+                long duration = endTime - startTime;
+
+                totalDuration += duration;
+
+
+                assertNotNull(path);
+                assertFalse(path.isEmpty());
+
+
+                long acceptableTimeThresholdInMilliseconds = 60000;
+                assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000,
+                        "Iteration " + (i + 1) + ": Duration exceeded acceptable threshold (" + duration / 1_000_000 + " ms)");
+            }
+        }
+
+        double averageDurationInMilliseconds = (double) totalDuration / iterations / 1_000_000;
+
+
+        System.out.println("Average duration: " + averageDurationInMilliseconds + " ms");
+
+        long acceptableAverageThresholdInMilliseconds = 60000;
+        assertTrue(averageDurationInMilliseconds < acceptableAverageThresholdInMilliseconds,
+                "Average duration exceeded acceptable threshold (" + averageDurationInMilliseconds + " ms)");
+    }
+    @Test
+    public void testCalculatePathPerformanceWithManyNoFlyZones() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+
+
+
+        List<NamedRegion> customNoFlyZones = generateNoFlyZones();
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+
+            long startTime = System.nanoTime();
+
+
+            List<LngLat> path = validationController.calculatePath(startPos, endPos);
+
+
+            long endTime = System.nanoTime();
+
+            long duration = endTime - startTime;
+
+
+            assertNotNull(path);
+            assertFalse(path.isEmpty());
+
+
+            long acceptableTimeThresholdInMilliseconds = 60000;
+            assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000);
+        }
+    }
+
+    @Test
+    public void testCalculatePathPerformanceRepeatWithManyNoFlyZone() throws Exception {
+        LngLat startPos = generateEdiLngLat();
+        LngLat endPos = generateEdiLngLat();
+        List<NamedRegion> customNoFlyZones = generateNoFlyZones();
+
+        int iterations = 100;
+        long totalDuration = 0;
+
+        try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
+            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+            for (int i = 0; i < iterations; i++) {
+                long startTime = System.nanoTime();
+
+
+                List<LngLat> path = validationController.calculatePath(startPos, endPos);
+
+                long endTime = System.nanoTime();
+                long duration = endTime - startTime;
+
+                totalDuration += duration;
+
+
+                assertNotNull(path);
+                assertFalse(path.isEmpty());
+
+                long acceptableTimeThresholdInMilliseconds = 60000;
+                assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000,
+                        "Iteration " + (i + 1) + ": Duration exceeded acceptable threshold (" + duration / 1_000_000 + " ms)");
+            }
+        }
+
+
+        double averageDurationInMilliseconds = (double) totalDuration / iterations / 1_000_000;
+
+        System.out.println("Average duration: " + averageDurationInMilliseconds + " ms");
+
+
+        long acceptableAverageThresholdInMilliseconds = 60000;
+        assertTrue(averageDurationInMilliseconds < acceptableAverageThresholdInMilliseconds,
+                "Average duration exceeded acceptable threshold (" + averageDurationInMilliseconds + " ms)");
+    }
+
+
+    //generate a LngLat close to Appleton
+    private LngLat generateCloseEdiLngLat(){
+        double centerLng = -3.186874;
+        double centerLat = 55.944494;
+
+        double lng = centerLng + (random.nextDouble() * 0.10 - 0.05);
+        double lat = centerLat + (random.nextDouble() * 0.10 - 0.05);
+        LngLat test = new LngLat();
+        test.setLng(lng);
+        test.setLat(lat);
+        return test;
+    }
+    private LngLat generateEdiLngLat(){
+         double MIN_LNG = -3.202541; // Minimum longitude
+         double MAX_LNG = -3.179799; // Maximum longitude
+         double MIN_LAT = 55.938911; // Minimum latitude
+         double MAX_LAT = 55.945846;
+
+        double lng = MIN_LNG + (random.nextDouble() * (MAX_LNG - MIN_LNG));
+
+        double lat = MIN_LAT + (random.nextDouble() * (MAX_LAT - MIN_LAT));
+
+        LngLat test = new LngLat();
+        test.setLng(lng);
+        test.setLat(lat);
+        return test;
+    }
+
+    private NamedRegion generateEdiRegion(){
+        NamedRegion region = new NamedRegion();
+        List<LngLat> vertices = new ArrayList<>();
+
+        int numVertices = random.nextInt(4) + 3;
+        for (int i = 0; i < numVertices - 1; i++) {
+            LngLat vertex = generateEdiLngLat();
+            vertices.add(vertex);
+        }
+
+        vertices.add(vertices.get(0));
+
+        region.setVertices(vertices);
+        return region;
+    }
+
+    private List <NamedRegion> generateNoFlyZones(){
+        int numNoFlyZones = random.nextInt(4) + 3;
+        List<NamedRegion> customNoFlyZones = new ArrayList<>();
+        for (int i = 0; i < numNoFlyZones; i++) {
+            customNoFlyZones.add(generateEdiRegion());
+        }
+        return customNoFlyZones;
 
     }
 
