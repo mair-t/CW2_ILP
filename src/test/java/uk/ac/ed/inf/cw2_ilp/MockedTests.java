@@ -617,19 +617,24 @@ public class MockedTests {
 
     @Test
     public void testCalculatePathPerformanceRepeatWithOneNoFlyZone() throws Exception {
-        LngLat startPos = generateEdiLngLat();
-        LngLat endPos = generateEdiLngLat();
-        List<NamedRegion> customNoFlyZones = List.of(generateEdiRegion());
+
+
 
         int iterations = 100;
         long totalDuration = 0;
 
         try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
-            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
-
             for (int i = 0; i < iterations; i++) {
-                long startTime = System.nanoTime();
+                LngLat startPos = generateEdiLngLat();
+                LngLat endPos = generateEdiLngLat();
 
+
+                List<NamedRegion> customNoFlyZones = List.of(generateEdiRegion());
+
+
+                mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+                long startTime = System.nanoTime();
 
                 List<LngLat> path = validationController.calculatePath(startPos, endPos);
 
@@ -638,9 +643,9 @@ public class MockedTests {
 
                 totalDuration += duration;
 
-
                 assertNotNull(path);
                 assertFalse(path.isEmpty());
+                System.out.println(i);
 
                 long acceptableTimeThresholdInMilliseconds = 60000;
                 assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000,
@@ -690,19 +695,24 @@ public class MockedTests {
 
     @Test
     public void testCalculatePathPerformanceRepeatWithNoNoFlyZone() throws Exception {
-        LngLat startPos = generateEdiLngLat();
-        LngLat endPos = generateEdiLngLat();
-        List<NamedRegion> customNoFlyZones = List.of();
+
+
 
         int iterations = 100;
         long totalDuration = 0;
 
         try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
-            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
-
             for (int i = 0; i < iterations; i++) {
-                long startTime = System.nanoTime();
 
+
+                LngLat startPos = generateEdiLngLat();
+                LngLat endPos = generateEdiLngLat();
+                List<NamedRegion> customNoFlyZones = List.of();
+
+
+                mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+                long startTime = System.nanoTime();
 
                 List<LngLat> path = validationController.calculatePath(startPos, endPos);
 
@@ -711,9 +721,9 @@ public class MockedTests {
 
                 totalDuration += duration;
 
-
                 assertNotNull(path);
                 assertFalse(path.isEmpty());
+                System.out.println(i);
 
                 long acceptableTimeThresholdInMilliseconds = 60000;
                 assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000,
@@ -768,23 +778,25 @@ public class MockedTests {
 
     @Test
     public void testCalculatePathPerformanceRepeatWithTwoNoFlyZone() throws Exception {
-        LngLat startPos = generateEdiLngLat();
-        LngLat endPos = generateEdiLngLat();
 
 
-        NamedRegion zone1 = generateEdiRegion();
-        NamedRegion zone2 = generateEdiRegion();
-        List<NamedRegion> customNoFlyZones = List.of(zone1, zone2);
 
         int iterations = 100;
         long totalDuration = 0;
 
         try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
-            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
-
             for (int i = 0; i < iterations; i++) {
-                long startTime = System.nanoTime();
+                LngLat startPos = generateEdiLngLat();
+                LngLat endPos = generateEdiLngLat();
 
+                NamedRegion zone1 = generateEdiRegion();
+                NamedRegion zone2 = generateEdiRegion();
+                List<NamedRegion> customNoFlyZones = List.of(zone1, zone2);
+
+
+                mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+                long startTime = System.nanoTime();
 
                 List<LngLat> path = validationController.calculatePath(startPos, endPos);
 
@@ -793,10 +805,10 @@ public class MockedTests {
 
                 totalDuration += duration;
 
-
                 assertNotNull(path);
                 assertFalse(path.isEmpty());
 
+                System.out.println(i);
 
                 long acceptableTimeThresholdInMilliseconds = 60000;
                 assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000,
@@ -848,19 +860,24 @@ public class MockedTests {
 
     @Test
     public void testCalculatePathPerformanceRepeatWithManyNoFlyZone() throws Exception {
-        LngLat startPos = generateEdiLngLat();
-        LngLat endPos = generateEdiLngLat();
-        List<NamedRegion> customNoFlyZones = generateNoFlyZones();
+
+
 
         int iterations = 100;
         long totalDuration = 0;
 
         try (MockedStatic<FetchFunctions> mockedStatic = mockStatic(FetchFunctions.class)) {
-            mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
-
             for (int i = 0; i < iterations; i++) {
-                long startTime = System.nanoTime();
+                LngLat startPos = generateEdiLngLat();
+                LngLat endPos = generateEdiLngLat();
 
+
+                List<NamedRegion> customNoFlyZones = generateNoFlyZones();
+
+
+                mockedStatic.when(FetchFunctions::fetchNoFlyZones).thenReturn(customNoFlyZones);
+
+                long startTime = System.nanoTime();
 
                 List<LngLat> path = validationController.calculatePath(startPos, endPos);
 
@@ -869,9 +886,10 @@ public class MockedTests {
 
                 totalDuration += duration;
 
-
                 assertNotNull(path);
                 assertFalse(path.isEmpty());
+
+                System.out.println(i);
 
                 long acceptableTimeThresholdInMilliseconds = 60000;
                 assertTrue(duration < acceptableTimeThresholdInMilliseconds * 1_000_000,

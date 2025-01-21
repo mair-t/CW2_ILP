@@ -246,6 +246,7 @@ public class PerformanceTests {
         ExecutorService executor = Executors.newFixedThreadPool(100);
         List<Callable<Void>> tasks = new ArrayList<>();
 
+
         for (String orderRequest : invalidOrders) {
             tasks.add(() -> {
                 long startTime = System.currentTimeMillis();
@@ -257,6 +258,7 @@ public class PerformanceTests {
                     if ((endTime - startTime) >= TIMEOUT_MS) {
                         fail("Response time exceeded limit. Took " + (endTime - startTime) + " ms.");
                     }
+
 
 
                 } catch (Exception e) {
